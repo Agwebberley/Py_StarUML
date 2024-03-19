@@ -1,0 +1,455 @@
+{
+    "_type": "Project",
+    "_id": "AAAAAAFF+h6SjaM2Hec=",
+    "name": "Untitled",
+    "ownedElements": [
+        {
+            "_type": "ERDDataModel",
+            "_id": "AAAAAAGN5wKPckMO0RI=",
+            "_parent": {
+                "$ref": "AAAAAAFF+h6SjaM2Hec="
+            },
+            "name": "Data Model1",
+            "ownedElements": [
+                {
+                    "_type": "ERDDiagram",
+                    "_id": "AAAAAAGN5wKPc0MPgzg=",
+                    "_parent": {
+                        "$ref": "AAAAAAGN5wKPckMO0RI="
+                    },
+                    "name": "ERDDiagram1"
+                },
+                {
+                    "_type": "ERDEntity",
+                    "_id": "AAAAAAGN5wWookNOncw=",
+                    "_parent": {
+                        "$ref": "AAAAAAGN5wKPckMO0RI="
+                    },
+                    "name": "Departments",
+                    "ownedElements": [
+                        {
+                            "_type": "ERDRelationship",
+                            "_id": "AAAAAAGN5xC+okS2Hms=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wWookNOncw="
+                            },
+                            "end1": {
+                                "_type": "ERDRelationshipEnd",
+                                "_id": "AAAAAAGN5xC+okS3vDs=",
+                                "_parent": {
+                                    "$ref": "AAAAAAGN5xC+okS2Hms="
+                                },
+                                "reference": {
+                                    "$ref": "AAAAAAGN5wWookNOncw="
+                                }
+                            },
+                            "end2": {
+                                "_type": "ERDRelationshipEnd",
+                                "_id": "AAAAAAGN5xC+okS4h5E=",
+                                "_parent": {
+                                    "$ref": "AAAAAAGN5xC+okS2Hms="
+                                },
+                                "name": "department_id",
+                                "reference": {
+                                    "$ref": "AAAAAAGN5wYFLEN1ydI="
+                                },
+                                "cardinality": "0..*"
+                            }
+                        }
+                    ],
+                    "columns": [
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN5wo39EPtwWA=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wWookNOncw="
+                            },
+                            "name": "department_name",
+                            "length": 0
+                        },
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN5wqGqkP0iZE=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wWookNOncw="
+                            },
+                            "name": "department_head",
+                            "length": 0
+                        },
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN5xK9L0TUFOs=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wWookNOncw="
+                            },
+                            "name": "department_id",
+                            "type": "VARCHAR",
+                            "length": "10",
+                            "primaryKey": true
+                        },
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN5xNjVkTcg1k=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wWookNOncw="
+                            },
+                            "name": "department_name",
+                            "type": "VARCHAR",
+                            "length": "100"
+                        },
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN5y2PDkWqnPc=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wWookNOncw="
+                            },
+                            "name": "department_head",
+                            "type": "VARCHAR",
+                            "length": "10",
+                            "foreignKey": true
+                        }
+                    ]
+                },
+                {
+                    "_type": "ERDEntity",
+                    "_id": "AAAAAAGN5wXEHUNb/0o=",
+                    "_parent": {
+                        "$ref": "AAAAAAGN5wKPckMO0RI="
+                    },
+                    "name": "Students",
+                    "ownedElements": [
+                        {
+                            "_type": "ERDRelationship",
+                            "_id": "AAAAAAGN5wzv9URAzSc=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wXEHUNb/0o="
+                            },
+                            "name": "student_id",
+                            "end1": {
+                                "_type": "ERDRelationshipEnd",
+                                "_id": "AAAAAAGN5wzv9URB4Wk=",
+                                "_parent": {
+                                    "$ref": "AAAAAAGN5wzv9URAzSc="
+                                },
+                                "reference": {
+                                    "$ref": "AAAAAAGN5wXEHUNb/0o="
+                                }
+                            },
+                            "end2": {
+                                "_type": "ERDRelationshipEnd",
+                                "_id": "AAAAAAGN5wzv9URCkok=",
+                                "_parent": {
+                                    "$ref": "AAAAAAGN5wzv9URAzSc="
+                                },
+                                "reference": {
+                                    "$ref": "AAAAAAGN5wkPZUPQjRQ="
+                                },
+                                "cardinality": "0..*"
+                            }
+                        }
+                    ],
+                    "columns": [
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN5wsNdEP8SQo=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wXEHUNb/0o="
+                            },
+                            "name": "student_id",
+                            "type": "VARCHAR",
+                            "length": 0,
+                            "primaryKey": true
+                        },
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN5wuBpEQDfGU=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wXEHUNb/0o="
+                            },
+                            "name": "student_first_name",
+                            "type": "VARCHAR",
+                            "length": "100"
+                        },
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN5yX78UVjaDM=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wXEHUNb/0o="
+                            },
+                            "name": "student_last_name",
+                            "type": "VARCHAR",
+                            "length": "100"
+                        },
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN5wv/S0Qf92w=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wXEHUNb/0o="
+                            },
+                            "name": "student_enrollment_year",
+                            "type": "INTEGER",
+                            "length": "4"
+                        }
+                    ]
+                },
+                {
+                    "_type": "ERDEntity",
+                    "_id": "AAAAAAGN5wYFLEN1ydI=",
+                    "_parent": {
+                        "$ref": "AAAAAAGN5wKPckMO0RI="
+                    },
+                    "name": "Courses",
+                    "ownedElements": [
+                        {
+                            "_type": "ERDRelationship",
+                            "_id": "AAAAAAGN5w1EOkRVQR8=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wYFLEN1ydI="
+                            },
+                            "name": "course_id",
+                            "end1": {
+                                "_type": "ERDRelationshipEnd",
+                                "_id": "AAAAAAGN5w1EO0RW72U=",
+                                "_parent": {
+                                    "$ref": "AAAAAAGN5w1EOkRVQR8="
+                                },
+                                "reference": {
+                                    "$ref": "AAAAAAGN5wYFLEN1ydI="
+                                }
+                            },
+                            "end2": {
+                                "_type": "ERDRelationshipEnd",
+                                "_id": "AAAAAAGN5w1EO0RXIqU=",
+                                "_parent": {
+                                    "$ref": "AAAAAAGN5w1EOkRVQR8="
+                                },
+                                "reference": {
+                                    "$ref": "AAAAAAGN5wkPZUPQjRQ="
+                                },
+                                "cardinality": "0..*"
+                            }
+                        }
+                    ],
+                    "columns": [
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN5wvDn0QROe4=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wYFLEN1ydI="
+                            },
+                            "name": "course_id",
+                            "type": "VARCHAR",
+                            "length": "10",
+                            "primaryKey": true
+                        },
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN5wvbSUQYJcU=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wYFLEN1ydI="
+                            },
+                            "name": "course_name",
+                            "type": "VARCHAR",
+                            "length": "100"
+                        },
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN5yzpS0WaQH0=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wYFLEN1ydI="
+                            },
+                            "name": "professor_id",
+                            "type": "VARCHAR",
+                            "length": "10",
+                            "foreignKey": true
+                        }
+                    ]
+                },
+                {
+                    "_type": "ERDEntity",
+                    "_id": "AAAAAAGN5wkPZUPQjRQ=",
+                    "_parent": {
+                        "$ref": "AAAAAAGN5wKPckMO0RI="
+                    },
+                    "name": "Students_Courses",
+                    "columns": [
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN5wxOnkQmTfk=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wkPZUPQjRQ="
+                            },
+                            "name": "enrollment_id",
+                            "type": "VARCHAR",
+                            "length": "10",
+                            "primaryKey": true
+                        },
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN5ykYWUVwdSw=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wkPZUPQjRQ="
+                            },
+                            "name": "course_id",
+                            "type": "VARCHAR",
+                            "length": "10",
+                            "foreignKey": true
+                        },
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN5yxTWUWSp+4=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wkPZUPQjRQ="
+                            },
+                            "name": "student_id",
+                            "type": "VARCHAR",
+                            "length": "10",
+                            "foreignKey": true
+                        }
+                    ]
+                },
+                {
+                    "_type": "ERDEntity",
+                    "_id": "AAAAAAGN5wnaf0PdykE=",
+                    "_parent": {
+                        "$ref": "AAAAAAGN5wKPckMO0RI="
+                    },
+                    "name": "Professors",
+                    "ownedElements": [
+                        {
+                            "_type": "ERDRelationship",
+                            "_id": "AAAAAAGN5w3zzURwKAw=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wnaf0PdykE="
+                            },
+                            "name": "deparment_id",
+                            "end1": {
+                                "_type": "ERDRelationshipEnd",
+                                "_id": "AAAAAAGN5w3zzkRxipc=",
+                                "_parent": {
+                                    "$ref": "AAAAAAGN5w3zzURwKAw="
+                                },
+                                "reference": {
+                                    "$ref": "AAAAAAGN5wnaf0PdykE="
+                                },
+                                "cardinality": "0..*"
+                            },
+                            "end2": {
+                                "_type": "ERDRelationshipEnd",
+                                "_id": "AAAAAAGN5w3zzkRyLkE=",
+                                "_parent": {
+                                    "$ref": "AAAAAAGN5w3zzURwKAw="
+                                },
+                                "reference": {
+                                    "$ref": "AAAAAAGN5wWookNOncw="
+                                }
+                            }
+                        },
+                        {
+                            "_type": "ERDRelationship",
+                            "_id": "AAAAAAGN5w8KFESSAO4=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wnaf0PdykE="
+                            },
+                            "name": "professor_id",
+                            "end1": {
+                                "_type": "ERDRelationshipEnd",
+                                "_id": "AAAAAAGN5w8KFESTXGk=",
+                                "_parent": {
+                                    "$ref": "AAAAAAGN5w8KFESSAO4="
+                                },
+                                "reference": {
+                                    "$ref": "AAAAAAGN5wnaf0PdykE="
+                                }
+                            },
+                            "end2": {
+                                "_type": "ERDRelationshipEnd",
+                                "_id": "AAAAAAGN5w8KFESUgCg=",
+                                "_parent": {
+                                    "$ref": "AAAAAAGN5w8KFESSAO4="
+                                },
+                                "reference": {
+                                    "$ref": "AAAAAAGN5wYFLEN1ydI="
+                                },
+                                "cardinality": "0..*"
+                            }
+                        },
+                        {
+                            "_type": "ERDRelationship",
+                            "_id": "AAAAAAGN5xg900Tuv5E=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wnaf0PdykE="
+                            },
+                            "name": "department_head",
+                            "end1": {
+                                "_type": "ERDRelationshipEnd",
+                                "_id": "AAAAAAGN5xg91ETvlPE=",
+                                "_parent": {
+                                    "$ref": "AAAAAAGN5xg900Tuv5E="
+                                },
+                                "reference": {
+                                    "$ref": "AAAAAAGN5wnaf0PdykE="
+                                },
+                                "cardinality": "0..1"
+                            },
+                            "end2": {
+                                "_type": "ERDRelationshipEnd",
+                                "_id": "AAAAAAGN5xg91ETw5nQ=",
+                                "_parent": {
+                                    "$ref": "AAAAAAGN5xg900Tuv5E="
+                                },
+                                "reference": {
+                                    "$ref": "AAAAAAGN5wWookNOncw="
+                                }
+                            }
+                        }
+                    ],
+                    "columns": [
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN5wyDF0QtP9k=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wnaf0PdykE="
+                            },
+                            "name": "professor_id",
+                            "type": "VARCHAR",
+                            "length": "10",
+                            "primaryKey": true
+                        },
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN5wyVJkQ04Vc=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wnaf0PdykE="
+                            },
+                            "name": "professor_first_name",
+                            "type": "VARCHAR",
+                            "length": "100"
+                        },
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN579I+EWzhUY=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wnaf0PdykE="
+                            },
+                            "name": "professor_last_name",
+                            "type": "VARCHAR",
+                            "length": "100"
+                        },
+                        {
+                            "_type": "ERDColumn",
+                            "_id": "AAAAAAGN5y1ThUWimQ0=",
+                            "_parent": {
+                                "$ref": "AAAAAAGN5wnaf0PdykE="
+                            },
+                            "name": "department_id",
+                            "type": "VARCHAR",
+                            "length": "10",
+                            "foreignKey": true
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
