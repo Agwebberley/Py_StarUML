@@ -39,12 +39,7 @@ class StarUML:
                     yield sub_sub_element
     
     def get_app_names(self):
-        app_names = []
-        for sub_element in self.iterate_elements():
-            app_name = sub_element['name'].split('.')[0]
-            if app_name not in app_names:
-                app_names.append(app_name)
-        return app_names
+        return list(set(sub_element['name'].split('.')[0] for sub_element in self.iterate_elements()))
     
     def print_out(self):
         def get_table_info(sub_element):
