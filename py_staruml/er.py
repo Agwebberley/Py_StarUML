@@ -77,11 +77,11 @@ class StarUML:
                 output.append('Table: ' + sub_element['name'])
                 output.append('Columns:')
                 if 'columns' in sub_element:
-                    for attribute in sub_element['columns']:
-                        output.append(' - ' + attribute['name'] + ': ' + attribute['type'])
-                        if 'tags' in attribute:
+                    for column in sub_element['columns']:
+                        output.append(' - ' + column['name'] + ': ' + column['type'])
+                        if 'tags' in column:
                             output.append('    Tags:')
-                            for tag in attribute['tags']:
+                            for tag in column['tags']:
                                 output.append('     - ' + tag['name'] + ': ' + tag['value'])
 
                 output.append('Relationships:')
@@ -123,10 +123,10 @@ class StarUML:
 
             for table_name, table_info in tables.items():
                 file_contents[app_folder] += f"\n\nclass {table_name}(models.Model):\n"
-                for attribute in table_info['attributes']:
-                    attribute_name, attribute_type = list(attribute.items())[0]
-                    django_attribute_type = type_mapping.get(attribute_type, 'CharField')
-                    file_contents[app_folder] += f"    {attribute_name} = models.{django_attribute_type}()\n"
+                for column in table_info['columns']:
+                    column_name, column_type = list(column.items())[0]
+                    django_column_type = type_mapping.get(column_type[0], 'CharField')
+                    file_contents[app_folder] += f"    {column_name} = models.{django_column_type}()\n"
                 for relationship in table_info['relationships']:
                     # Relationship format: {relationship_name: [connected_app, connected_table, cardinality]}
                     relationship_name = list(relationship.keys())[0]
@@ -138,7 +138,7 @@ class StarUML:
                     else:
                         file_contents[app_folder] += f"    {relationship_name} = models.{model_type}('{connected_app}.{connected_table}', on_delete=models.CASCADE)\n"
 
-                if not table_info['attributes'] and not table_info['relationships']:
+                if not table_info['columns'] and not table_info['relationships']:
                     file_contents[app_folder] += "    pass\n"
 
         for app_folder, content in file_contents.items():
@@ -151,7 +151,7 @@ class StarUML:
         """ Structure: 
         {app_name: 
             {table_name: 
-                {attributes: [{attribute_name: attribute_type}], 
+                {columns: [{column_name: [{attribute_name: attribute_value}...]}], 
                 relationships: [{relationship_name: [connected_app, connected_table, cardinality]}]
         }}}
         """
@@ -162,10 +162,15 @@ class StarUML:
                 if app_name not in database:
                     database[app_name] = {}
                 if table_name not in database[app_name]:
-                    database[app_name][table_name] = {'attributes': [], 'relationships': []}
+                    database[app_name][table_name] = {'columns': [], 'relationships': []}
                 if 'columns' in sub_element:
-                    for attribute in sub_element['columns']:
-                        database[app_name][table_name]['attributes'].append({attribute['name']: attribute['type']})
+                    if 'columns' not in database[app_name][table_name]:
+                        database[app_name][table_name]['columns'] = []
+                    for column in sub_element['columns']:
+                        print(column)
+                        database[app_name][table_name]['columns'].append({column['name']: [column['type']]})
+                        if 'primaryKey' in column:
+                            database[app_name][table_name]['columns'][-1][column['name']].append({'primaryKey': column['primaryKey']})
                 if 'ownedElements' in sub_element:
                     for relationship in self.iterate_elements(sub_element, predicate=lambda x: x['_type'] == 'ERDRelationship'):
                         connected_table_id = relationship['end2']['reference']['$ref']
@@ -177,7 +182,7 @@ class StarUML:
                             if connected_app_name not in database:
                                 database[connected_app_name] = {}
                             if connected_table_name not in database[connected_app_name]:
-                                database[connected_app_name][connected_table_name] = {'attributes': [], 'relationships': []}
+                                database[connected_app_name][connected_table_name] = {'columns': [], 'relationships': []}
                             # Determine the cardinality of the relationship
                             if 'cardinality' in relationship['end1'] and 'cardinality' in relationship['end2']:
                                 cardinality_end1 = relationship['end1']['cardinality']
@@ -221,19 +226,19 @@ class StarUML:
             for table_name, table_info in tables.items():
                 for relationship in table_info['relationships']:
                     relationship_name = list(relationship.keys())[0]
-                    database[app_name][table_name]['attributes'] = [attribute for attribute in table_info['attributes'] if list(attribute.keys())[0] != relationship_name]
-        
+                    database[app_name][table_name]['columns'] = [column for column in table_info['columns'] if list(column.keys())[0] != relationship_name]
+        self.pretty_print(database)
         return database
 
-    def get_attributes(self, sub_element, type_mapping):
-        attributes = ""
+    def get_columns(self, sub_element, type_mapping):
+        columns = ""
         if 'columns' in sub_element:
-            for attribute in sub_element['columns']:
-                attribute_name = attribute['name']
-                attribute_type = attribute['type']
-                django_attribute_type = type_mapping.get(attribute_type, 'CharField')
-                attributes += f"    {attribute_name} = models.{django_attribute_type}()\n"
-        return attributes
+            for column in sub_element['columns']:
+                column_name = column['name']
+                column_type = column['type']
+                django_column_type = type_mapping.get(column_type, 'CharField')
+                columns += f"    {column_name} = models.{django_column_type}()\n"
+        return columns
 
     def get_relationships(self, sub_element, element):
         relationships = ""
