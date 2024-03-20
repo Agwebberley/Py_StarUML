@@ -208,17 +208,44 @@ class StarUML:
                                 # If the cardinality on both ends is 1, connect the relationship to the current table
                                 # Becuase there is no way to determine which table is the parent, we will ask the user to specify
 
-                                child_table = input(f"Which table is the child in the relationship {relationship['name']} between 1. {app_name}.{table_name} and 2. {connected_app_name}.{connected_table_name}? ")
-                                if child_table == "1":
-                                    child_table = table_name
-                                    child_app = app_name
-                                    parent_table = connected_table_name
-                                    parent_app = connected_app_name
-                                else:
-                                    child_table = connected_table_name
-                                    child_app = connected_app_name
-                                    parent_table = table_name
-                                    parent_app = app_name
+                                # Search both tables to see if one of them has a column that has the same name as the relationship
+                                # If it does, that table is the child
+                                # If neither table has a column with the same name as the relationship, ask the user to specify
+                                child_table = None
+                                child_app = None
+                                parent_table = None
+                                parent_app = None
+
+                                # Search the first table
+                                if app_name in database and table_name in database[app_name]:
+                                    table_info = database[app_name][table_name]
+                                    if relationship['name'] in [list(column.keys())[0] for column in table_info['columns']]:
+                                        child_table = table_name
+                                        child_app = app_name
+                                        parent_table = connected_table_name
+                                        parent_app = connected_app_name
+
+                                # Search the second table
+                                if connected_app_name in database and connected_table_name in database[connected_app_name]:
+                                    table_info = database[connected_app_name][connected_table_name]
+                                    if relationship['name'] in [list(column.keys())[0] for column in table_info['columns']]:
+                                        child_table = connected_table_name
+                                        child_app = connected_app_name
+                                        parent_table = table_name
+                                        parent_app = app_name
+
+                                if child_table is None or child_app is None or parent_table is None or parent_app is None:
+                                    child_table = input(f"Which table is the child in the relationship {relationship['name']} between 1. {app_name}.{table_name} and 2. {connected_app_name}.{connected_table_name}? ")
+                                    if child_table == "1":
+                                        child_table = table_name
+                                        child_app = app_name
+                                        parent_table = connected_table_name
+                                        parent_app = connected_app_name
+                                    else:
+                                        child_table = connected_table_name
+                                        child_app = connected_app_name
+                                        parent_table = table_name
+                                        parent_app = app_name
 
                                 database[child_app][child_table]['relationships'].append({relationship['name']: [parent_app, parent_table, cardinality_end1]})
         # Remove attrubutes that correspond to relationships
