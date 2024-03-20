@@ -5,9 +5,38 @@ import ast
 
 class StarUML:
     """
+    Represents a StarUML object that provides functionality to load and manipulate StarUML data.
+
+    Attributes:
+        file_path (str): The path to the StarUML file.
+        folder_path (str): The path to the folder where the generated Django models will be saved.
+        data (dict): The loaded StarUML data.
+
+    Methods:
+        __init__(file_path, folder_path=''): Initializes a new instance of the StarUML class.
+        load_data(): Loads the StarUML data from the file.
+        pretty_print(data): Prints the StarUML data in a pretty format.
+        iterate_elements(element=None, predicate=None): Iterates over the elements in the StarUML data.
+        get_app_names(): Returns a list of unique app names in the StarUML data.
+        print_out(): Prints the table and relationship information from the StarUML data.
+        generate_django_models(): Generates Django models based on the StarUML data.
+        database_dictionary(): Converts the StarUML data into a dictionary representing the database structure.
+    """
+
+    def __init__(self, file_path, folder_path=''):
+        self.file_path = file_path
+        self.data = None
+        if folder_path == '':
+            folder_path = file_path.split('.')[0]
+        self.folder_path = folder_path
+        cfv = ClassFunctionVisitor()
+        self.cfv = cfv
+
+    # Rest of the code...
+class StarUML:
+    """
     TODO: Add a validation function to check if the models already match the database design
     TODO: Allow any functions within models.py files to persist
-    TEST
     """
     def __init__(self, file_path, folder_path=''):
         self.file_path = file_path
