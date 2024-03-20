@@ -7,7 +7,7 @@ class StarUML:
     """
     TODO: Add a validation function to check if the models already match the database design
     TODO: Allow any functions within models.py files to persist
-
+    TEST
     """
     def __init__(self, file_path, folder_path=''):
         self.file_path = file_path
