@@ -82,7 +82,7 @@ class StarUML:
             'DATETIME': 'DateTimeField',
             'TEXT': 'TextField',
         }
-        database = self.reorginize_database(self.database_dictionary())
+        database = self.database_dictionary()
         file_contents = {}
 
         for app_name, tables in database.items():
@@ -195,41 +195,6 @@ class StarUML:
                     database[app_name][table_name]['attributes'] = [attribute for attribute in table_info['attributes'] if list(attribute.keys())[0] != relationship_name]
         
         return database
-
-
-    def reorginize_database(self, database):
-        # This function reorders models within an app to ensure that models with foreign keys are placed after the models they reference
-
-        # First, create a dictionary of the relationships
-        relationships = {}
-        for app_name, tables in database.items():
-            for table_name, table_info in tables.items():
-                for relationship in table_info['relationships']:
-                    relationship_name = list(relationship.keys())[0]
-                    connected_app, connected_table, cardinality = list(relationship.values())[0]
-                    if app_name not in relationships:
-                        relationships[app_name] = {}
-                    if connected_app not in relationships[app_name]:
-                        relationships[app_name][connected_app] = set()
-                    relationships[app_name][connected_app].add(connected_table)  # Fix: Store the connected_table instead of table_name
-
-        # Next, create a dictionary of the order of the models
-        order = {}
-        for app_name, tables in database.items():
-            order[app_name] = set()
-            for table_name, table_info in tables.items():
-                order[app_name].add(table_name)
-
-        # Now, reorder the models
-        for app_name, connected_apps in relationships.items():
-            for connected_app, connected_tables in connected_apps.items():
-                order[app_name] = order[app_name].union(connected_tables)
-
-        # Finally, reorder the models within the database dictionary
-        for app_name, tables in database.items():
-            database[app_name] = {table_name: database[app_name][table_name] for table_name in order[app_name]}
-        return database
-
 
     def get_attributes(self, sub_element, type_mapping):
         attributes = ""
