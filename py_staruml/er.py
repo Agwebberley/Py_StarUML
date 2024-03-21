@@ -33,6 +33,7 @@ class StarUML:
 
     def __init__(self, file_path, folder_path=''):
         self.file_path = file_path
+        self.database = {}
         self.data = None
         if folder_path == '':
             folder_path = file_path.split('.')[0]
@@ -47,6 +48,39 @@ class StarUML:
             logging.error(f"Error: File '{self.file_path}' not found.")
         except json.JSONDecodeError:
             logging.error(f"Error: Invalid JSON format in file '{self.file_path}'.")
+    
+    def dump_database_to_file(self, dir_path='', file_path=''):
+        """
+        Dump the database to a JSON file.
+
+        Args:
+            file_path (str): The path to the file where the database will be dumped.
+            dir_path (str): The path to the directory where the file will be saved.
+
+        Returns:
+            None
+        """
+        try:
+            if file_path == '':
+                file_path = self.file_path.split('.')[0] + '_database.json'
+            if not file_path.endswith('.json'):
+                file_path += '.json'
+                logging.warning(f"File path does not end with '.json'. Appending '.json' to the file path: {file_path}")
+            if os.path.exists(file_path):
+                logging.warning(f"File '{file_path}' already exists. It will be overwritten.")
+            if self.database is {}:
+                self.database_dictionary()
+                logging.warning("Database is empty. Generating database dictionary.")
+            if dir_path != '':
+                file_path = os.path.join(dir_path, os.path.basename(file_path))
+                logging.warning(f"Directory path provided. File path updated to: {file_path}")
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            logging.debug(f"Dumping database to file: {file_path}")
+            with open(file_path, 'w') as file:
+                json.dump(self.database, file)
+        except IOError as e:
+            logging.error(f"Error dumping database to file: {e}")
+        logging.info(f"Database dumped to file: {file_path}")
 
     def pretty_print(self, data):
             """
@@ -490,15 +524,19 @@ class StarUML:
             logging.error(f"Error: An error occurred while removing relationship attributes: {e}")
 
 if __name__ == '__main__':
-    # Note: Path may need to be changed to the location of the Database.mdj file
-    logging.basicConfig(filename='app.log', filemode='w', format='%(levelname)s - %(message)s', level=logging.INFO)
-    file_path = 'Database.mdj'
-    erd = StarUML(file_path)
-    erd.load_data()
-    #erd.print_out()
-    erd.generate_django_models()
-    dbproject = "DBProject.mdj"
-    erd = StarUML(dbproject)
-    erd.load_data()
-    #erd.print_out()
-    erd.generate_django_models()
+    LOGGING_LEVEL = logging.DEBUG
+    LOGGING_FORMAT = '%(levelname)s - %(message)s'
+    LOGGING_FILE = 'app.log'
+    LOGGING_MODE = 'w'
+    logging.basicConfig(filename=LOGGING_FILE, filemode=LOGGING_MODE, format=LOGGING_FORMAT, level=LOGGING_LEVEL)
+    file_paths = ['Database.mdj', 'DBProject.mdj']
+    for i in file_paths:
+        staruml = StarUML(i)
+        staruml.load_data()
+        staruml.database_dictionary()
+        staruml.dump_database_to_file(dir_path='schemas')
+        staruml.generate_django_models()
+        logging.info(f"Database dictionary for file '{i}': {staruml.database}")
+        logging.info(f"Empty classes for file '{i}': {staruml.get_empty_classes()}")
+        logging.info(f"App names for file '{i}': {staruml.get_app_names()}")
+        logging.info(f"Relationships imports for file '{i}': {staruml.get_relationships_imports()}")
