@@ -1,5 +1,8 @@
 import json
 import os
+import logging
+
+
 class StarUML:
     """
     Represents a StarUML object that provides functionality to load and manipulate StarUML data.
@@ -116,6 +119,7 @@ class StarUML:
         for app_folder, content in file_contents.items():
             with open(os.path.join(app_folder, 'models.py'), 'w') as f:
                 f.write(content)
+                logging.info(f"Generated Django models for app: {app_folder}")
 
     def get_columns(self, table_info, type_mapping):
         columns = ""
@@ -177,6 +181,7 @@ class StarUML:
         return empty_classes
     
     def database_dictionary(self):
+        logging.info("Creating database dictionary...")
         self.database = {}
         for element in self.iterate_elements(predicate=lambda x: x['_type'] == 'ERDDataModel'):
             for sub_element in self.iterate_elements(element, predicate=lambda x: x['_type'] == 'ERDEntity'):
@@ -187,6 +192,7 @@ class StarUML:
                 if 'ownedElements' in sub_element:
                     self.add_relationships(sub_element, element, app_name, table_name)
         self.remove_relationship_attributes()
+        logging.info("Database dictionary created.")
         return self.database
     
     def create_database_structure(self, element, sub_element):
@@ -294,16 +300,14 @@ class StarUML:
 
 if __name__ == '__main__':
     # Note: Path may need to be changed to the location of the Database.mdj file
-    DBG = True
+    logging.basicConfig(filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.INFO)
     file_path = 'Database.mdj'
     erd = StarUML(file_path)
     erd.load_data()
     #erd.print_out()
     erd.generate_django_models()
-    if DBG: erd.pretty_print(erd.database_dictionary())
     dbproject = "DBProject.mdj"
     erd = StarUML(dbproject)
     erd.load_data()
     #erd.print_out()
     erd.generate_django_models()
-    if DBG: erd.pretty_print(erd.database_dictionary())
