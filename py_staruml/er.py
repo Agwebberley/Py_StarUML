@@ -32,27 +32,41 @@ class StarUML:
 
 
     def load_data(self):
-        with open(self.file_path) as f:
-            self.data = json.load(f)
+        try:
+            with open(self.file_path) as f:
+                self.data = json.load(f)
+        except FileNotFoundError:
+            logging.error(f"Error: File '{self.file_path}' not found.")
+        except json.JSONDecodeError:
+            logging.error(f"Error: Invalid JSON format in file '{self.file_path}'.")
 
     def pretty_print(self, data):
         if data is None:
             data = self.data
-        print(json.dumps(data, indent=4))
-    
+        try:
+            logging.info(json.dumps(data, indent=4))
+        except TypeError:
+            logging.error("Error: Unable to pretty print the data.")
+
     def iterate_elements(self, element=None, predicate=None):
         if element is None:
             element = self.data
-        for sub_element in element['ownedElements']:
-            if predicate is None or predicate(sub_element):
-                yield sub_element
-            if 'ownedElements' in sub_element:
-                for sub_sub_element in self.iterate_elements(sub_element, predicate):
-                    yield sub_sub_element
-    
+        try:
+            for sub_element in element['ownedElements']:
+                if predicate is None or predicate(sub_element):
+                    yield sub_element
+                if 'ownedElements' in sub_element:
+                    for sub_sub_element in self.iterate_elements(sub_element, predicate):
+                        yield sub_sub_element
+        except KeyError:
+            logging.error("Error: Invalid data format.")
+
     def get_app_names(self):
-        return list(set(sub_element['name'].split('.')[0] for sub_element in self.iterate_elements()))
-    
+        try:
+            return list(set(sub_element['name'].split('.')[0] for sub_element in self.iterate_elements()))
+        except KeyError:
+            logging.error("Error: Invalid data format.")
+            return []
     def print_out(self):
         def get_table_info(sub_element):
             output = []
@@ -117,82 +131,105 @@ class StarUML:
                     file_contents[app_folder] += "    pass\n"
 
         for app_folder, content in file_contents.items():
-            with open(os.path.join(app_folder, 'models.py'), 'w') as f:
-                f.write(content)
-                logging.info(f"Generated Django models for app: {app_folder}")
+            try:
+                with open(os.path.join(app_folder, 'models.py'), 'w') as f:
+                    f.write(content)
+                    logging.info(f"Generated Django models for app: {app_folder}")
+            except IOError as e:
+                logging.error(f"Error writing file: {e}")
 
     def get_columns(self, table_info, type_mapping):
         columns = ""
         if 'columns' in table_info:
             for column in table_info['columns']:
-                column_name, column_attributes = list(column.items())[0]
-                column_type, column_length, column_primary_key, column_unique, column_not_null = column_attributes
-                django_column_type = type_mapping.get(column_type, 'CharField')
-                columns += f"    {column_name} = models.{django_column_type}("
-                if column_type in ['CHAR', 'TEXT'] and column_length > 0:
-                    columns += f"max_length={column_length}, "
-                if column_primary_key:
-                    columns += "primary_key=True, "
-                if column_unique:
-                    columns += "unique=True, "
-                if column_not_null:
-                    columns += "null=False, "
-                columns = columns.rstrip(", ")  # Remove trailing comma and whitespace
-                columns += ")\n"
+                try:
+                    column_name, column_attributes = list(column.items())[0]
+                    column_type, column_length, column_primary_key, column_unique, column_not_null = column_attributes
+                    django_column_type = type_mapping.get(column_type, 'CharField')
+                    columns += f"    {column_name} = models.{django_column_type}("
+                    if column_type in ['CHAR', 'TEXT'] and column_length > 0:
+                        columns += f"max_length={column_length}, "
+                    if column_primary_key:
+                        columns += "primary_key=True, "
+                    if column_unique:
+                        columns += "unique=True, "
+                    if column_not_null:
+                        columns += "null=False, "
+                    columns = columns.rstrip(", ")  # Remove trailing comma and whitespace
+                    columns += ")\n"
+                except Exception as e:
+                    logging.error(f"Error: Unable to process column. {e}")
         return columns
 
     def get_relationships(self, table_info, app_name):
         relationships = ""
         if 'relationships' in table_info:
             for relationship in table_info['relationships']:
-                relationship_name = list(relationship.keys())[0]
-                connected_app, connected_table, cardinality = list(relationship.values())[0]
-                model_type = 'ForeignKey' if cardinality == '0..*' else 'OneToOneField'
-                if connected_app == app_name:
-                    relationships += f"    {relationship_name} = models.{model_type}('{connected_table}', on_delete=models.CASCADE)\n"
-                else:
-                    relationships += f"    {relationship_name} = models.{model_type}({connected_table}, on_delete=models.CASCADE)\n"
+                try:
+                    relationship_name = list(relationship.keys())[0]
+                    connected_app, connected_table, cardinality = list(relationship.values())[0]
+                    model_type = 'ForeignKey' if cardinality == '0..*' else 'OneToOneField'
+                    if connected_app == app_name:
+                        relationships += f"    {relationship_name} = models.{model_type}('{connected_table}', on_delete=models.CASCADE)\n"
+                    else:
+                        relationships += f"    {relationship_name} = models.{model_type}({connected_table}, on_delete=models.CASCADE)\n"
+                except Exception as e:
+                    logging.error(f"Error: Unable to process relationship. {e}")
         return relationships
 
     def get_relationships_imports(self):
         # Return a dictionary with the app name as the key and the set of imported tables as the value
         relationships_imports = {}
-        database = self.database_dictionary()
-        for app_name, tables in database.items():
-            relationships_imports[app_name] = {}
-            for table_name, table_info in tables.items():
-                relationships_imports[app_name][table_name] = set()
-                for relationship in table_info['relationships']:
-                    connected_app, connected_table, _ = list(relationship.values())[0]
-                    if connected_app != app_name:
-                        relationships_imports[app_name][table_name].add((connected_app, connected_table))
+        try:
+            database = self.database_dictionary()
+            for app_name, tables in database.items():
+                relationships_imports[app_name] = {}
+                for table_name, table_info in tables.items():
+                    relationships_imports[app_name][table_name] = set()
+                    for relationship in table_info['relationships']:
+                        try:
+                            connected_app, connected_table, _ = list(relationship.values())[0]
+                            if connected_app != app_name:
+                                relationships_imports[app_name][table_name].add((connected_app, connected_table))
+                        except (KeyError, IndexError):
+                            logging.error("Error: Invalid relationship format.")
+        except KeyError:
+            logging.error("Error: Invalid data format.")
         return relationships_imports
 
     def get_empty_classes(self):
         # Return a dictionary with the app name as the key and the set of empty classes as the value
         empty_classes = {}
-
-        for sub_element in self.iterate_elements(predicate=lambda x: x['_type'] == 'ERDEntity'):
-            if 'columns' not in sub_element:
-                app_name, table_name = sub_element['name'].split('.')
-                if app_name not in empty_classes:
-                    empty_classes[app_name] = set()
-                empty_classes[app_name].add(table_name)
+        try:
+            for sub_element in self.iterate_elements(predicate=lambda x: x['_type'] == 'ERDEntity'):
+                if 'columns' not in sub_element:
+                    try:
+                        app_name, table_name = sub_element['name'].split('.')
+                        if app_name not in empty_classes:
+                            empty_classes[app_name] = set()
+                        empty_classes[app_name].add(table_name)
+                    except (KeyError, ValueError):
+                        logging.error("Error: Invalid entity format.")
+        except KeyError:
+            logging.error("Error: Invalid data format.")
         return empty_classes
     
     def database_dictionary(self):
         logging.info("Creating database dictionary...")
         self.database = {}
-        for element in self.iterate_elements(predicate=lambda x: x['_type'] == 'ERDDataModel'):
-            for sub_element in self.iterate_elements(element, predicate=lambda x: x['_type'] == 'ERDEntity'):
-                self.create_database_structure(element, sub_element)
-                app_name, table_name = sub_element['name'].split('.')
-                if 'columns' in sub_element:
-                    self.add_columns(sub_element, app_name, table_name)
-                if 'ownedElements' in sub_element:
-                    self.add_relationships(sub_element, element, app_name, table_name)
-        self.remove_relationship_attributes()
-        logging.info("Database dictionary created.")
+        try:
+            for element in self.iterate_elements(predicate=lambda x: x['_type'] == 'ERDDataModel'):
+                for sub_element in self.iterate_elements(element, predicate=lambda x: x['_type'] == 'ERDEntity'):
+                    self.create_database_structure(element, sub_element)
+                    app_name, table_name = sub_element['name'].split('.')
+                    if 'columns' in sub_element:
+                        self.add_columns(sub_element, app_name, table_name)
+                    if 'ownedElements' in sub_element:
+                        self.add_relationships(sub_element, element, app_name, table_name)
+            self.remove_relationship_attributes()
+            logging.info("Database dictionary created.")
+        except Exception as e:
+            logging.error(f"Error creating database dictionary: {e}")
         return self.database
     
     def create_database_structure(self, element, sub_element):
@@ -204,103 +241,116 @@ class StarUML:
 
     def add_columns(self, sub_element, app_name, table_name):
         for column in sub_element['columns']:
-            column_info = {
-                column['name']: [
-                    column['type'],
-                    int(column.get('length', 0)),
-                    bool(column.get('primaryKey', False)),
-                    bool(column.get('unique', False)),
-                    bool(column.get('notNull', False))
-                ]
-            }
-            self.database[app_name][table_name]['columns'].append(column_info)
+            try:
+                column_info = {
+                    column['name']: [
+                        column['type'],
+                        int(column.get('length', 0)),
+                        bool(column.get('primaryKey', False)),
+                        bool(column.get('unique', False)),
+                        bool(column.get('notNull', False))
+                    ]
+                }
+                # If the column is a text type and has a length of 0, set the length to 255
+                if column_info[column['name']][0] in ['CHAR', 'TEXT'] and column_info[column['name']][1] == 0:
+                    column_info[column['name']][1] = 255
+                    logging.warning(f"Column '{column['name']}' in table '{table_name}' of app '{app_name}' has a length of 0. Setting length to 255.")
+                self.database[app_name][table_name]['columns'].append(column_info)
+            except KeyError as e:
+                logging.error(f"Error: Invalid column format in table '{table_name}' of app '{app_name}'. Skipping column.")
+            except ValueError as e:
+                logging.error(f"Error: Invalid length value in column '{column['name']}' of table '{table_name}' in app '{app_name}'. Skipping column.")
+            except Exception as e:
+                logging.error(f"Error: An error occurred while adding column '{column['name']}' to table '{table_name}' in app '{app_name}': {e}. Skipping column.")
     
     def add_relationships(self, sub_element, element, app_name, table_name):
-        for relationship in self.iterate_elements(sub_element, predicate=lambda x: x['_type'] == 'ERDRelationship'):
-            connected_table_id = relationship['end2']['reference']['$ref']
-            # The connected table is the table that the relationship needs to be added to
-            # Which is different from the current table, we need to make sure it exists, if it doesn't, create it
-            for connected_element in self.iterate_elements(element, predicate=lambda x: x['_type'] == 'ERDEntity' and x['_id'] == connected_table_id):
-                connected_table_name = connected_element['name']
-                connected_app_name, connected_table_name = connected_table_name.split('.')
-                if connected_app_name not in self.database:
-                    self.database[connected_app_name] = {}
-                if connected_table_name not in self.database[connected_app_name]:
-                    self.database[connected_app_name][connected_table_name] = {'columns': [], 'relationships': []}
-                # Determine the cardinality of the relationship
-                if 'cardinality' in relationship['end1'] and 'cardinality' in relationship['end2']:
-                    cardinality_end1 = relationship['end1']['cardinality']
-                    cardinality_end2 = relationship['end2']['cardinality']
-                elif 'cardinality' in relationship['end1']:
-                    cardinality_end1 = relationship['end1']['cardinality']
-                    cardinality_end2 = "1"
-                else:
-                    cardinality_end2 = relationship['end2']['cardinality']
-                    cardinality_end1 = "1"
-                
-                if cardinality_end1 == '0..*':
-                    # If the cardinality on end1 is 0..*, connect the relationship to the current table
-                    self.database[app_name][table_name]['relationships'].append({relationship['name']: [connected_app_name, connected_table_name, cardinality_end1]})
-                
-                if cardinality_end2 == '0..*':
-                    # If the cardinality on end2 is 0..*, connect the relationship to the connected table
-                    self.database[connected_app_name][connected_table_name]['relationships'].append({relationship['name']: [app_name, table_name, cardinality_end2]})
-                
-                if (cardinality_end1 == '1' or cardinality_end1 =="0..1") and (cardinality_end2 == '1' or cardinality_end2 == "0..1"):
-                    # If the cardinality on both ends is 1, connect the relationship to the current table
-                    # Because there is no way to determine which table is the parent, we will ask the user to specify
+        try:
+            for relationship in self.iterate_elements(sub_element, predicate=lambda x: x['_type'] == 'ERDRelationship'):
+                connected_table_id = relationship['end2']['reference']['$ref']
+                # The connected table is the table that the relationship needs to be added to
+                # Which is different from the current table, we need to make sure it exists, if it doesn't, create it
+                for connected_element in self.iterate_elements(element, predicate=lambda x: x['_type'] == 'ERDEntity' and x['_id'] == connected_table_id):
+                    connected_table_name = connected_element['name']
+                    connected_app_name, connected_table_name = connected_table_name.split('.')
+                    if connected_app_name not in self.database:
+                        self.database[connected_app_name] = {}
+                    if connected_table_name not in self.database[connected_app_name]:
+                        self.database[connected_app_name][connected_table_name] = {'columns': [], 'relationships': []}
+                    # Determine the cardinality of the relationship
+                    if 'cardinality' in relationship['end1'] and 'cardinality' in relationship['end2']:
+                        cardinality_end1 = relationship['end1']['cardinality']
+                        cardinality_end2 = relationship['end2']['cardinality']
+                    elif 'cardinality' in relationship['end1']:
+                        cardinality_end1 = relationship['end1']['cardinality']
+                        cardinality_end2 = "1"
+                    else:
+                        cardinality_end2 = relationship['end2']['cardinality']
+                        cardinality_end1 = "1"
 
-                    # Search both tables to see if one of them has a column that has the same name as the relationship
-                    # If it does, that table is the child
-                    # If neither table has a column with the same name as the relationship, ask the user to specify
-                    child_table = None
-                    child_app = None
-                    parent_table = None
-                    parent_app = None
+                    if cardinality_end1 == '0..*':
+                        # If the cardinality on end1 is 0..*, connect the relationship to the current table
+                        self.database[app_name][table_name]['relationships'].append({relationship['name']: [connected_app_name, connected_table_name, cardinality_end1]})
 
-                    # Search the first table
-                    if app_name in self.database and table_name in self.database[app_name]:
-                        table_info = self.database[app_name][table_name]
-                        if relationship['name'] in [list(column.keys())[0] for column in table_info['columns']]:
-                            child_table = table_name
-                            child_app = app_name
-                            parent_table = connected_table_name
-                            parent_app = connected_app_name
+                    if cardinality_end2 == '0..*':
+                        # If the cardinality on end2 is 0..*, connect the relationship to the connected table
+                        self.database[connected_app_name][connected_table_name]['relationships'].append({relationship['name']: [app_name, table_name, cardinality_end2]})
 
-                    # Search the second table
-                    if connected_app_name in self.database and connected_table_name in self.database[connected_app_name]:
-                        table_info = self.database[connected_app_name][connected_table_name]
-                        if relationship['name'] in [list(column.keys())[0] for column in table_info['columns']]:
-                            child_table = connected_table_name
-                            child_app = connected_app_name
-                            parent_table = table_name
-                            parent_app = app_name
+                    if (cardinality_end1 == '1' or cardinality_end1 =="0..1") and (cardinality_end2 == '1' or cardinality_end2 == "0..1"):
+                        # If the cardinality on both ends is 1, connect the relationship to the current table
+                        # Because there is no way to determine which table is the parent, we will ask the user to specify
 
-                    if child_table is None or child_app is None or parent_table is None or parent_app is None:
-                        child_table = input(f"Which table is the child in the relationship {relationship['name']} between 1. {app_name}.{table_name} and 2. {connected_app_name}.{connected_table_name}? ")
-                        if child_table == "1":
-                            child_table = table_name
-                            child_app = app_name
-                            parent_table = connected_table_name
-                            parent_app = connected_app_name
+                        # Search both tables to see if one of them has a column that has the same name as the relationship
+                        # If it does, that table is the child
+                        # If neither table has a column with the same name as the relationship, ask the user to specify
+                        child_table = None
+                        child_app = None
+                        parent_table = None
+                        parent_app = None
+
+                        # Search the first table
+                        if app_name in self.database and table_name in self.database[app_name]:
+                            table_info = self.database[app_name][table_name]
+                            if relationship['name'] in [list(column.keys())[0] for column in table_info['columns']]:
+                                child_table = table_name
+                                child_app = app_name
+                                parent_table = connected_table_name
+                                parent_app = connected_app_name
+
+                        # Search the second table
+                        if connected_app_name in self.database and connected_table_name in self.database[connected_app_name]:
+                            table_info = self.database[connected_app_name][connected_table_name]
+                            if relationship['name'] in [list(column.keys())[0] for column in table_info['columns']]:
+                                child_table = connected_table_name
+                                child_app = connected_app_name
+                                parent_table = table_name
+                                parent_app = app_name
                         else:
-                            child_table = connected_table_name
-                            child_app = connected_app_name
-                            parent_table = table_name
-                            parent_app = app_name
+                            # If the relationship is not found in either table, assume the parent is the current table
+                            child_table = table_name
+                            child_app = app_name
+                            parent_table = connected_table_name
+                            parent_app = connected_app_name
+                            logging.warning(f"Unable to determine parent and child tables for relationship '{relationship['name']}'. Please specify the parent table.")
 
-                    self.database[child_app][child_table]['relationships'].append({relationship['name']: [parent_app, parent_table, cardinality_end1]})
-    
+                        self.database[child_app][child_table]['relationships'].append({relationship['name']: [parent_app, parent_table, cardinality_end1]})
+        except Exception as e:
+            logging.error(f"An error occurred while adding relationships: {str(e)}")
     def remove_relationship_attributes(self):
-        for app_name, tables in self.database.items():
-            for table_name, table_info in tables.items():
-                for relationship in table_info['relationships']:
-                    relationship_name = list(relationship.keys())[0]
-                    self.database[app_name][table_name]['columns'] = [column for column in table_info['columns'] if list(column.keys())[0] != relationship_name]
+        try:
+            for app_name, tables in self.database.items():
+                for table_name, table_info in tables.items():
+                    for relationship in table_info['relationships']:
+                        relationship_name = list(relationship.keys())[0]
+                        self.database[app_name][table_name]['columns'] = [column for column in table_info['columns'] if list(column.keys())[0] != relationship_name]
+                        logging.info(f"Removed relationship attribute '{relationship_name}' from table '{table_name}' in app '{app_name}'.")
+        except KeyError as e:
+            logging.error(f"Error: Invalid data format. {e}")
+        except Exception as e:
+            logging.error(f"Error: An error occurred while removing relationship attributes: {e}")
 
 if __name__ == '__main__':
     # Note: Path may need to be changed to the location of the Database.mdj file
-    logging.basicConfig(filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+    logging.basicConfig(filename='app.log', filemode='w', format='%(levelname)s - %(message)s', level=logging.INFO)
     file_path = 'Database.mdj'
     erd = StarUML(file_path)
     erd.load_data()
