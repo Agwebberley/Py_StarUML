@@ -4,12 +4,12 @@ from Customers import customers
 
 
 class orderItem(models.Model):
-    quantity = models.IntegerField()
+    quantity = models.IntegerField(max_length=0)
     item = models.ForeignKey(items, on_delete=models.CASCADE)
     order = models.ForeignKey('orders', on_delete=models.CASCADE)
 
 
 class orders(models.Model):
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(max_length=0)
+    updated_at = models.DateTimeField(max_length=0)
     customer = models.ForeignKey(customers, on_delete=models.CASCADE)

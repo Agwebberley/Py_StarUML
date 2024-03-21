@@ -2,9 +2,9 @@ from django.db import models
 
 
 class items(models.Model):
-    name = models.CharField()
-    description = models.CharField()
-    price = models.CharField()
-    target_inv = models.IntegerField()
-    current_inv = models.IntegerField()
-    reorder_level = models.IntegerField()
+    name = models.CharField(max_length=50)
+    description = models.CharField(max_length=0)
+    price = models.CharField(max_length=0)
+    target_inv = models.IntegerField(max_length=0)
+    current_inv = models.IntegerField(max_length=0)
+    reorder_level = models.IntegerField(max_length=0)

@@ -134,7 +134,9 @@ class StarUML:
                 for column in table_info['columns']:
                     column_name, column_type = list(column.items())[0]
                     django_column_type = type_mapping.get(column_type[0], 'CharField')
-                    file_contents[app_folder] += f"    {column_name} = models.{django_column_type}()\n"
+                    file_contents[app_folder] += f"    {column_name} = models.{django_column_type}(" 
+                    file_contents[app_folder] += f"max_length={column_type[1]})\n" if len(column_type) > 1 else ")\n"
+                    
                 for relationship in table_info['relationships']:
                     # Relationship format: {relationship_name: [connected_app, connected_table, cardinality]}
                     relationship_name = list(relationship.keys())[0]
@@ -145,6 +147,7 @@ class StarUML:
                         file_contents[app_folder] += f"    {relationship_name} = models.{model_type}('{connected_table}', on_delete=models.CASCADE)\n"
                     else:
                         file_contents[app_folder] += f"    {relationship_name} = models.{model_type}({connected_table}, on_delete=models.CASCADE)\n"
+                    
 
                 if not table_info['columns'] and not table_info['relationships']:
                     file_contents[app_folder] += "    pass\n"
@@ -176,8 +179,23 @@ class StarUML:
                         database[app_name][table_name]['columns'] = []
                     for column in sub_element['columns']:
                         database[app_name][table_name]['columns'].append({column['name']: [column['type']]})
+                        if 'length' in column:
+                            database[app_name][table_name]['columns'][-1][column['name']].append(int(column['length']))
+                        else:
+                            database[app_name][table_name]['columns'][-1][column['name']].append(0)
                         if 'primaryKey' in column:
-                            database[app_name][table_name]['columns'][-1][column['name']].append({'primaryKey': column['primaryKey']})
+                            database[app_name][table_name]['columns'][-1][column['name']].append(bool(column['primaryKey']))
+                        else:
+                            database[app_name][table_name]['columns'][-1][column['name']].append(False)
+                        if 'unique' in column:
+                            database[app_name][table_name]['columns'][-1][column['name']].append(bool(column['unique']))
+                        else:
+                            database[app_name][table_name]['columns'][-1][column['name']].append(False)
+                        if 'notNull' in column:
+                            database[app_name][table_name]['columns'][-1][column['name']].append(bool(column['notNull']))
+                        else:
+                            database[app_name][table_name]['columns'][-1][column['name']].append(False)
+                        
                 if 'ownedElements' in sub_element:
                     for relationship in self.iterate_elements(sub_element, predicate=lambda x: x['_type'] == 'ERDRelationship'):
                         connected_table_id = relationship['end2']['reference']['$ref']
