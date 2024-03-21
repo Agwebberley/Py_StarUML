@@ -167,7 +167,6 @@ class StarUML:
                     if 'columns' not in database[app_name][table_name]:
                         database[app_name][table_name]['columns'] = []
                     for column in sub_element['columns']:
-                        print(column)
                         database[app_name][table_name]['columns'].append({column['name']: [column['type']]})
                         if 'primaryKey' in column:
                             database[app_name][table_name]['columns'][-1][column['name']].append({'primaryKey': column['primaryKey']})
@@ -197,11 +196,11 @@ class StarUML:
 
                             
                             if cardinality_end1 == '0..*':
-                                # If the cardinality on end1 is 0..1 or 1, connect the relationship to the current table
+                                # If the cardinality on end1 is 0..*, connect the relationship to the current table
                                 database[app_name][table_name]['relationships'].append({relationship['name']: [connected_app_name, connected_table_name, cardinality_end1]})
                             
                             if cardinality_end2 == '0..*':
-                                # If the cardinality on end2 is 0..1 or 1, connect the relationship to the connected table
+                                # If the cardinality on end2 is 0..*, connect the relationship to the connected table
                                 database[connected_app_name][connected_table_name]['relationships'].append({relationship['name']: [app_name, table_name, cardinality_end2]})
                             
                             if (cardinality_end1 == '1' or cardinality_end1 =="0..1") and (cardinality_end2 == '1' or cardinality_end2 == "0..1"):
@@ -432,12 +431,13 @@ def print_from_database():
 
 if __name__ == '__main__':
     # Note: Path may need to be changed to the location of the Database.mdj file
-    file_path = 'DBProject.mdj'
+    DBG = True
+    file_path = 'Database.mdj'
     erd = StarUML(file_path)
     erd.load_data()
     erd.print_out()
     erd.generate_django_models()
-    erd.pretty_print(erd.database_dictionary())
+    if DBG: erd.pretty_print(erd.database_dictionary())
 
     # WIP: This is for handling/perseing the functions within the models.py file
     #cfv = ClassFunctionVisitor()
