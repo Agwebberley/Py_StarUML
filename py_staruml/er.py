@@ -112,6 +112,8 @@ class StarUML:
             'TEXT': 'TextField',
         }
         database = self.database_dictionary()
+        relationships_imports = self.get_relationships_imports()
+        print(relationships_imports)
         file_contents = {}
 
         for app_name, tables in database.items():
@@ -120,9 +122,12 @@ class StarUML:
 
             if app_folder not in file_contents:
                 file_contents[app_folder] = f"from django.db import models\n"
-                # Iterate through database to find the imported tables
-                for connected_app, connected_tables in self.get_relationships_imports().get(app_name, {}).items():
-                    file_contents[app_folder] += f"from {connected_app}.models import {', '.join(connected_tables)}\n"
+                if relationships_imports is not None and app_name in relationships_imports:
+                    for table_name, connected_tables in relationships_imports[app_name].items():
+                        for connected_app, connected_table in connected_tables:
+                            file_contents[app_folder] += f"from {connected_app} import {connected_table}\n"
+
+
 
             for table_name, table_info in tables.items():
                 file_contents[app_folder] += f"\n\nclass {table_name}(models.Model):\n"
@@ -284,26 +289,17 @@ class StarUML:
 
     def get_relationships_imports(self):
         # Return a dictionary with the app name as the key and the set of imported tables as the value
-        imported_tables = {}
-        for element in self.iterate_elements(predicate=lambda x: x['_type'] == 'ERDDataModel'):
-            for sub_element in self.iterate_elements(element, predicate=lambda x: x['_type'] == 'ERDEntity'):
-                if 'ownedElements' in sub_element:
-                    for relationship in self.iterate_elements(sub_element, predicate=lambda x: x['_type'] == 'ERDRelationship'):
-                        connected_table_id = relationship['end2']['reference']['$ref']
-                        for connected_element in self.iterate_elements(element, predicate=lambda x: x['_type'] == 'ERDEntity' and x['_id'] == connected_table_id):
-                            connected_table_name = connected_element['name']
-                            table_name = sub_element['name']
-                            connected_app_name, connected_table_name = connected_table_name.split('.')
-                            app_name, table_name = table_name.split('.')
-                            # Dictionary structure:
-                            # {app_name: {connected_app_name: [table1, table2, ...]}}
-                            if app_name != connected_app_name:
-                                if app_name not in imported_tables:
-                                    imported_tables[app_name] = {}
-                                if connected_app_name not in imported_tables[app_name]:
-                                    imported_tables[app_name][connected_app_name] = set()
-                                imported_tables[app_name][connected_app_name].add(connected_table_name)
-        return imported_tables
+        relationships_imports = {}
+        database = self.database_dictionary()
+        for app_name, tables in database.items():
+            relationships_imports[app_name] = {}
+            for table_name, table_info in tables.items():
+                relationships_imports[app_name][table_name] = set()
+                for relationship in table_info['relationships']:
+                    connected_app, connected_table, _ = list(relationship.values())[0]
+                    if connected_app != app_name:
+                        relationships_imports[app_name][table_name].add((connected_app, connected_table))
+        return relationships_imports
 
     def get_empty_classes(self):
         # Return a dictionary with the app name as the key and the set of empty classes as the value
