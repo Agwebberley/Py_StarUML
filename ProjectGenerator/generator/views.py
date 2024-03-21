@@ -41,11 +41,9 @@ class SchemaCreateView(CreateView):
 
         # Handle the file upload
         file = self.request.FILES.get('file')
-        if file:
-            # Process the file here
-            # For example, you can save it to a specific location or perform any other operations
 
-            return super().form_valid(form)
+
+        return super().form_valid(form)
 
 class SchemaUpdateView(UpdateView):
     model = Schema
@@ -60,7 +58,7 @@ class SchemaUpdateView(UpdateView):
 
 class SchemaDeleteView(DeleteView):
     model = Schema
-    success_url = reverse_lazy('generator:scehma_list')
+    success_url = reverse_lazy('generator:schema_list')
     template_name = 'delete.html'
 
     def get_context_data(self, **kwargs):
