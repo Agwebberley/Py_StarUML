@@ -298,6 +298,12 @@ if __name__ == '__main__':
     file_path = 'Database.mdj'
     erd = StarUML(file_path)
     erd.load_data()
-    erd.print_out()
+    #erd.print_out()
+    erd.generate_django_models()
+    if DBG: erd.pretty_print(erd.database_dictionary())
+    dbproject = "DBProject.mdj"
+    erd = StarUML(dbproject)
+    erd.load_data()
+    #erd.print_out()
     erd.generate_django_models()
     if DBG: erd.pretty_print(erd.database_dictionary())
