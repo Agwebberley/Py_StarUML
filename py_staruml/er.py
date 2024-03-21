@@ -113,7 +113,6 @@ class StarUML:
         }
         database = self.database_dictionary()
         relationships_imports = self.get_relationships_imports()
-        print(relationships_imports)
         file_contents = {}
 
         for app_name, tables in database.items():
@@ -127,35 +126,54 @@ class StarUML:
                         for connected_app, connected_table in connected_tables:
                             file_contents[app_folder] += f"from {connected_app} import {connected_table}\n"
 
-
-
             for table_name, table_info in tables.items():
                 file_contents[app_folder] += f"\n\nclass {table_name}(models.Model):\n"
-                for column in table_info['columns']:
-                    column_name, column_type = list(column.items())[0]
-                    django_column_type = type_mapping.get(column_type[0], 'CharField')
-                    file_contents[app_folder] += f"    {column_name} = models.{django_column_type}(" 
-                    file_contents[app_folder] += f"max_length={column_type[1]})\n" if len(column_type) > 1 else ")\n"
-                    
-                for relationship in table_info['relationships']:
-                    # Relationship format: {relationship_name: [connected_app, connected_table, cardinality]}
-                    relationship_name = list(relationship.keys())[0]
-                    connected_app, connected_table, cardinality = list(relationship.values())[0]
-                    model_type = 'ForeignKey' if cardinality == '0..*' else 'OneToOneField'
-                    # Lazy import the table if it is in the same app
-                    if connected_app == app_name:
-                        file_contents[app_folder] += f"    {relationship_name} = models.{model_type}('{connected_table}', on_delete=models.CASCADE)\n"
-                    else:
-                        file_contents[app_folder] += f"    {relationship_name} = models.{model_type}({connected_table}, on_delete=models.CASCADE)\n"
-                    
-
+                file_contents[app_folder] += self.get_columns(table_info, type_mapping)
+                file_contents[app_folder] += self.get_relationships(table_info, app_name)
                 if not table_info['columns'] and not table_info['relationships']:
                     file_contents[app_folder] += "    pass\n"
 
         for app_folder, content in file_contents.items():
-            print(app_folder)
             with open(os.path.join(app_folder, 'models.py'), 'w') as f:
                 f.write(content)
+
+    def get_columns(self, table_info, type_mapping):
+        columns = ""
+        if 'columns' in table_info:
+            for column in table_info['columns']:
+                # The column is a dictionary with the key being the column name and the value being a list of attributes
+                column_name = list(column.keys())[0]
+                column_type = column[column_name][0]
+                column_length = column[column_name][1]
+                column_primary_key = column[column_name][2]
+                column_unique = column[column_name][3]
+                column_not_null = column[column_name][4]
+                django_column_type = type_mapping.get(column_type, 'CharField')
+                columns += f"    {column_name} = models.{django_column_type}("
+                if column_type in ['CHAR', 'TEXT'] and column_length > 0:
+                    columns += f"max_length={column_length}, "
+                if column_primary_key:
+                    columns += "primary_key=True, "
+                if column_unique:
+                    columns += "unique=True, "
+                if column_not_null:
+                    columns += "null=False, "
+                columns = columns.rstrip(", ")  # Remove trailing comma and whitespace
+                columns += ")\n"
+        return columns
+
+    def get_relationships(self, table_info, app_name):
+        relationships = ""
+        if 'relationships' in table_info:
+            for relationship in table_info['relationships']:
+                relationship_name = list(relationship.keys())[0]
+                connected_app, connected_table, cardinality = list(relationship.values())[0]
+                model_type = 'ForeignKey' if cardinality == '0..*' else 'OneToOneField'
+                if connected_app == app_name:
+                    relationships += f"    {relationship_name} = models.{model_type}('{connected_table}', on_delete=models.CASCADE)\n"
+                else:
+                    relationships += f"    {relationship_name} = models.{model_type}({connected_table}, on_delete=models.CASCADE)\n"
+        return relationships
 
     def database_dictionary(self):
         # As an intermediate step, create a dictionary of the database structure
@@ -178,23 +196,16 @@ class StarUML:
                     if 'columns' not in database[app_name][table_name]:
                         database[app_name][table_name]['columns'] = []
                     for column in sub_element['columns']:
-                        database[app_name][table_name]['columns'].append({column['name']: [column['type']]})
-                        if 'length' in column:
-                            database[app_name][table_name]['columns'][-1][column['name']].append(int(column['length']))
-                        else:
-                            database[app_name][table_name]['columns'][-1][column['name']].append(0)
-                        if 'primaryKey' in column:
-                            database[app_name][table_name]['columns'][-1][column['name']].append(bool(column['primaryKey']))
-                        else:
-                            database[app_name][table_name]['columns'][-1][column['name']].append(False)
-                        if 'unique' in column:
-                            database[app_name][table_name]['columns'][-1][column['name']].append(bool(column['unique']))
-                        else:
-                            database[app_name][table_name]['columns'][-1][column['name']].append(False)
-                        if 'notNull' in column:
-                            database[app_name][table_name]['columns'][-1][column['name']].append(bool(column['notNull']))
-                        else:
-                            database[app_name][table_name]['columns'][-1][column['name']].append(False)
+                        column_info = {
+                            column['name']: [
+                                column['type'],
+                                int(column.get('length', 0)),
+                                bool(column.get('primaryKey', False)),
+                                bool(column.get('unique', False)),
+                                bool(column.get('notNull', False))
+                            ]
+                        }
+                        database[app_name][table_name]['columns'].append(column_info)
                         
                 if 'ownedElements' in sub_element:
                     for relationship in self.iterate_elements(sub_element, predicate=lambda x: x['_type'] == 'ERDRelationship'):
@@ -219,8 +230,6 @@ class StarUML:
                                 cardinality_end2 = relationship['end2']['cardinality']
                                 cardinality_end1 = "1"
                             
-
-                            
                             if cardinality_end1 == '0..*':
                                 # If the cardinality on end1 is 0..*, connect the relationship to the current table
                                 database[app_name][table_name]['relationships'].append({relationship['name']: [connected_app_name, connected_table_name, cardinality_end1]})
@@ -231,7 +240,7 @@ class StarUML:
                             
                             if (cardinality_end1 == '1' or cardinality_end1 =="0..1") and (cardinality_end2 == '1' or cardinality_end2 == "0..1"):
                                 # If the cardinality on both ends is 1, connect the relationship to the current table
-                                # Becuase there is no way to determine which table is the parent, we will ask the user to specify
+                                # Because there is no way to determine which table is the parent, we will ask the user to specify
 
                                 # Search both tables to see if one of them has a column that has the same name as the relationship
                                 # If it does, that table is the child
@@ -273,37 +282,13 @@ class StarUML:
                                         parent_app = app_name
 
                                 database[child_app][child_table]['relationships'].append({relationship['name']: [parent_app, parent_table, cardinality_end1]})
-        # Remove attrubutes that correspond to relationships
+        # Remove attributes that correspond to relationships
         for app_name, tables in database.items():
             for table_name, table_info in tables.items():
                 for relationship in table_info['relationships']:
                     relationship_name = list(relationship.keys())[0]
                     database[app_name][table_name]['columns'] = [column for column in table_info['columns'] if list(column.keys())[0] != relationship_name]
-        self.pretty_print(database)
         return database
-
-    def get_columns(self, sub_element, type_mapping):
-        columns = ""
-        if 'columns' in sub_element:
-            for column in sub_element['columns']:
-                column_name = column['name']
-                column_type = column['type']
-                django_column_type = type_mapping.get(column_type, 'CharField')
-                columns += f"    {column_name} = models.{django_column_type}()\n"
-        return columns
-
-    def get_relationships(self, sub_element, element):
-        relationships = ""
-        if 'ownedElements' in sub_element:
-            for relationship in self.iterate_elements(sub_element, predicate=lambda x: x['_type'] == 'ERDRelationship'):
-                connected_table_id = relationship['end2']['reference']['$ref']
-                for connected_element in self.iterate_elements(predicate=lambda x: x['_type'] == 'ERDEntity' and x['_id'] == connected_table_id):
-                    connected_table_name = connected_element['name']
-                    table_name = sub_element['name']
-                    _connected_app_name, connected_table_name = connected_table_name.split('.')
-                    _app_name, table_name = table_name.split('.')
-                    relationships += f"    {table_name.lower()} = models.ForeignKey({connected_table_name}, on_delete=models.CASCADE)\n"
-        return relationships
 
     def get_relationships_imports(self):
         # Return a dictionary with the app name as the key and the set of imported tables as the value
@@ -331,121 +316,6 @@ class StarUML:
                 empty_classes[app_name].add(table_name)
         return empty_classes
 
-class ClassFunctionVisitor(ast.NodeVisitor):
-    def __init__(self):
-        self.classes = {}
-
-    def visit_ClassDef(self, node):
-        # Initialize an empty list for each class to hold its functions
-        self.classes[node.name] = []
-        # Visit each node within the class definition to find function definitions
-        self.generic_visit(node)
-    def visit_FunctionDef(self, node):
-        # Assuming the parent node is a ClassDef, add the function name to the class's list
-        if isinstance(node.parent, ast.ClassDef):
-            self.classes[node.parent.name].append(node.name)
-    def generic_visit(self, node):
-        # Before visiting children, set the parent attribute
-        for child in ast.iter_child_nodes(node):
-            child.parent = node
-        super().generic_visit(node)
-    
-    def get_parent(self, node):
-        # Since there is no built-in way to get the parent node, we can use this method
-        # We have to traverse the tree from the root to the current node to find the parent
-        for parent in ast.walk(self.tree):
-            for child in ast.iter_child_nodes(parent):
-                if child == node:
-                    return parent
-    def parse_python_file_with_ast(self, file_path):
-        with open(file_path, 'r') as file:
-            content = file.read()
-            # Parse the content into an AST
-            self.tree = ast.parse(content)
-            # Visit the AST to fill the classes dictionary
-            self.visit(self.tree)
-        return self.classes
-    def send_to_database(self, file_path):
-        # Parse the file and get the classes and functions
-        classes = self.parse_python_file_with_ast(file_path)
-        # Using AST, find the actual code for each function
-        with open(file_path, 'r') as file:
-            content = file.read()
-            tree = ast.parse(content)
-            for class_name, functions in classes.items():
-                for function_name in functions:
-                    for node in ast.walk(tree):
-                        parent = self.get_parent(node)
-                        if parent is not None:
-                            if isinstance(node, ast.FunctionDef) and node.name == function_name and parent.name == class_name:
-                                code = ast.unparse(node)
-                                save_to_database(class_name, function_name, code)
-
-
-class Database():
-    # This class is for handling the database operations
-    # TODO: Add support for other database engines
-    def __init__(self, database_engine="SQLite3", database_file_path="database.db"):
-        self.database_engine = database_engine
-        self.database_file_path = database_file_path
-        self.conn = sqlite3.connect(self.database_file_path)
-        self.cursor = self.conn.cursor()
-        self.create_database()
-        self.conn.commit()
-        self.conn.close()
-
-    def create_database(self):
-        pass
-
-    def save_to_database(self, class_name, function_name, code):
-        self.conn = sqlite3.connect(self.database_file_path)
-        self.cursor = self.conn.cursor()
-        self.cursor.execute("DELETE FROM functions")
-        self.cursor.execute("INSERT INTO functions VALUES (?, ?, ?)", (class_name, function_name, code))
-        self.conn.commit()
-        self.conn.close()
-
-    def print_from_database(self):
-        self.conn = sqlite3.connect(self.database_file_path)
-        self.cursor = self.conn.cursor()
-        self.cursor.execute("SELECT * FROM functions")
-        for row in self.cursor.fetchall():
-            print(row)
-        self.conn.close()
-
-
-def save_to_database(class_name, function_name, code):
-    # Connect to the database
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
-
-    # Create a table if it doesn't exist
-    cursor.execute('''CREATE TABLE IF NOT EXISTS functions
-                      (class_name TEXT, function_name TEXT, code TEXT)''')
-
-    # Insert the data into the table
-    cursor.execute("DELETE FROM functions")
-    cursor.execute("INSERT INTO functions VALUES (?, ?, ?)", (class_name, function_name, code))
-
-    # Commit the changes and close the connection
-    conn.commit()
-    conn.close()
-
-def print_from_database():
-    # Connect to the database
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
-
-    # Select all the data from the table
-    cursor.execute("SELECT * FROM functions")
-
-    # Print the data
-    for row in cursor.fetchall():
-        print(row)
-
-    # Close the connection
-    conn.close()
-
 if __name__ == '__main__':
     # Note: Path may need to be changed to the location of the Database.mdj file
     DBG = True
@@ -455,9 +325,3 @@ if __name__ == '__main__':
     erd.print_out()
     erd.generate_django_models()
     if DBG: erd.pretty_print(erd.database_dictionary())
-
-    # WIP: This is for handling/perseing the functions within the models.py file
-    #cfv = ClassFunctionVisitor()
-    #print(cfv.parse_python_file_with_ast(r'Orders\\models.py'))
-    #cfv.send_to_database(r'Orders\\models.py')
-    #print_from_database()
