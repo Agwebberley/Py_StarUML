@@ -35,6 +35,18 @@ class SchemaCreateView(CreateView):
     def get_success_url(self):
         return reverse_lazy('generator:schema_list')
 
+    def form_valid(self, form):
+        # Save the form data
+        self.object = form.save()
+
+        # Handle the file upload
+        file = self.request.FILES.get('file')
+        if file:
+            # Process the file here
+            # For example, you can save it to a specific location or perform any other operations
+
+            return super().form_valid(form)
+
 class SchemaUpdateView(UpdateView):
     model = Schema
     form_class = SchemaForm
