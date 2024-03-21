@@ -120,6 +120,9 @@ class StarUML:
 
             if app_folder not in file_contents:
                 file_contents[app_folder] = f"from django.db import models\n"
+                # Iterate through database to find the imported tables
+                for connected_app, connected_tables in self.get_relationships_imports().get(app_name, {}).items():
+                    file_contents[app_folder] += f"from {connected_app}.models import {', '.join(connected_tables)}\n"
 
             for table_name, table_info in tables.items():
                 file_contents[app_folder] += f"\n\nclass {table_name}(models.Model):\n"
@@ -136,7 +139,7 @@ class StarUML:
                     if connected_app == app_name:
                         file_contents[app_folder] += f"    {relationship_name} = models.{model_type}('{connected_table}', on_delete=models.CASCADE)\n"
                     else:
-                        file_contents[app_folder] += f"    {relationship_name} = models.{model_type}('{connected_app}.{connected_table}', on_delete=models.CASCADE)\n"
+                        file_contents[app_folder] += f"    {relationship_name} = models.{model_type}({connected_table}, on_delete=models.CASCADE)\n"
 
                 if not table_info['columns'] and not table_info['relationships']:
                     file_contents[app_folder] += "    pass\n"
