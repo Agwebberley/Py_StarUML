@@ -13,14 +13,22 @@ class StarUML:
         data (dict): The loaded StarUML data.
 
     Methods:
-        __init__(file_path, folder_path=''): Initializes a new instance of the StarUML class.
-        load_data(): Loads the StarUML data from the file.
-        pretty_print(data): Prints the StarUML data in a pretty format.
-        iterate_elements(element=None, predicate=None): Iterates over the elements in the StarUML data.
-        get_app_names(): Returns a list of unique app names in the StarUML data.
-        print_out(): Prints the table and relationship information from the StarUML data.
-        generate_django_models(): Generates Django models based on the StarUML data.
-        database_dictionary(): Converts the StarUML data into a dictionary representing the database structure.
+        __init__(self, file_path, folder_path=''): Initializes a new instance of the StarUML class.
+        load_data(self): Loads the StarUML data from the file.
+        pretty_print(self, data): Prints the StarUML data in a pretty format.
+        iterate_elements(self, element=None, predicate=None): Iterates over the elements in the StarUML data.
+        get_app_names(self): Returns a list of unique app names in the StarUML data.
+        print_out(self): Prints the table and relationship information from the StarUML data.
+        generate_django_models(self): Generates Django models based on the StarUML data.
+        database_dictionary(self): Converts the StarUML data into a dictionary representing the database structure.
+        create_database_structure(self, element, sub_element): Creates the database structure for a given element and sub-element.
+        add_columns(self, sub_element, app_name, table_name): Adds columns to the database structure for a given sub-element.
+        add_relationships(self, sub_element, element, app_name, table_name): Adds relationships to the database structure for a given sub-element.
+        remove_relationship_attributes(self): Removes relationship attributes from the database structure.
+        get_columns(self, table_info, type_mapping): Returns the column definitions for a given table.
+        get_relationships(self, table_info, app_name): Returns the relationship definitions for a given table.
+        get_relationships_imports(self): Returns a dictionary with the app name as the key and the set of imported tables as the value.
+        get_empty_classes(self): Returns a dictionary with the app name as the key and the set of empty classes as the value.
     """
 
     def __init__(self, file_path, folder_path=''):
@@ -41,14 +49,41 @@ class StarUML:
             logging.error(f"Error: Invalid JSON format in file '{self.file_path}'.")
 
     def pretty_print(self, data):
-        if data is None:
-            data = self.data
-        try:
-            logging.info(json.dumps(data, indent=4))
-        except TypeError:
-            logging.error("Error: Unable to pretty print the data.")
+            """
+            Prints the given data in a pretty format.
+
+            Args:
+                data: The data to be printed.
+
+            Raises:
+                TypeError: If the data cannot be pretty printed.
+
+            """
+            if data is None:
+                data = self.data
+            try:
+                logging.info(json.dumps(data, indent=4))
+            except TypeError:
+                logging.error("Error: Unable to pretty print the data.")
 
     def iterate_elements(self, element=None, predicate=None):
+        """
+        Iterates over the elements in the data structure.
+
+        Args:
+            element (dict): The element to start iterating from. If None, the root element will be used.
+            predicate (function): A function that takes an element as input and returns a boolean value. Only elements
+                                  for which the predicate returns True will be yielded.
+
+        Yields:
+            dict: The next element in the iteration.
+
+        Raises:
+            KeyError: If the data format is invalid.
+
+        Returns:
+            None
+        """
         if element is None:
             element = self.data
         try:
@@ -62,43 +97,36 @@ class StarUML:
             logging.error("Error: Invalid data format.")
 
     def get_app_names(self):
-        try:
-            return list(set(sub_element['name'].split('.')[0] for sub_element in self.iterate_elements()))
-        except KeyError:
-            logging.error("Error: Invalid data format.")
-            return []
-    def print_out(self):
-        def get_table_info(sub_element):
-            output = []
-            if sub_element['_type'] == 'ERDEntity':  # Exclude relationships from being treated as tables
-                output.append('Table: ' + sub_element['name'])
-                output.append('Columns:')
-                if 'columns' in sub_element:
-                    for column in sub_element['columns']:
-                        output.append(' - ' + column['name'] + ': ' + column['type'])
-                        if 'tags' in column:
-                            output.append('    Tags:')
-                            for tag in column['tags']:
-                                output.append('     - ' + tag['name'] + ': ' + tag['value'])
+            """
+            Returns a list of unique application names extracted from the elements.
 
-                output.append('Relationships:')
-                if 'ownedElements' in sub_element:
-                    for relationship in sub_element['ownedElements']:
-                        if relationship['_type'] == 'ERDRelationship':
-                            output.append(' - ' + relationship['name'] + '; connected Table: ' + relationship['end2']['reference']['$ref'])
-                            for connected_element in self.data['ownedElements']:
-                                if connected_element['_type'] == 'ERDEntity' and connected_element['_id'] == relationship['end2']['reference']['$ref']:
-                                    output.append(sub_element['name'] + ' - ' + connected_element['name'] + '; Cardinality: ' +
-                                                  (relationship['end1']['cardinality'] if 'cardinality' in relationship['end1'] else '1') +
-                                                  '-' +
-                                                  (relationship['end2']['cardinality'] if 'cardinality' in relationship['end2'] else '1'))
+            Returns:
+                list: A list of unique application names.
 
-            return '\n'.join(output)
-        
-        output = [get_table_info(sub_element) for sub_element in self.iterate_elements()]
-        print('\n'.join(output))
+            Raises:
+                KeyError: If the data format is invalid.
+            """
+            try:
+                return list(set(sub_element['name'].split('.')[0] for sub_element in self.iterate_elements()))
+            except KeyError:
+                logging.error("Error: Invalid data format.")
+                return []
 
     def generate_django_models(self):
+        """
+        Generates Django models based on the database dictionary.
+
+        This method iterates over the database dictionary and generates Django models
+        for each table in the database. It uses a type mapping dictionary to map
+        database column types to Django field types. It also handles relationships
+        between tables and imports related models if necessary.
+
+        Returns:
+            None
+
+        Raises:
+            IOError: If there is an error writing the generated models to a file.
+        """
         type_mapping = {
             'CHAR': 'CharField',
             'INTEGER': 'IntegerField',
@@ -139,6 +167,20 @@ class StarUML:
                 logging.error(f"Error writing file: {e}")
 
     def get_columns(self, table_info, type_mapping):
+        """
+        Generate Django model columns based on the provided table_info and type_mapping.
+
+        Args:
+            table_info (dict): Information about the table, including its columns.
+            type_mapping (dict): Mapping of column types from the original database to Django model field types.
+
+        Returns:
+            str: Generated Django model columns.
+
+        Raises:
+            Exception: If there is an error processing a column.
+
+        """
         columns = ""
         if 'columns' in table_info:
             for column in table_info['columns']:
@@ -162,6 +204,20 @@ class StarUML:
         return columns
 
     def get_relationships(self, table_info, app_name):
+        """
+        Retrieves the relationships for a given table and app name.
+
+        Args:
+            table_info (dict): A dictionary containing information about the table.
+            app_name (str): The name of the Django app.
+
+        Returns:
+            str: A string representation of the relationships.
+
+        Raises:
+            Exception: If there is an error processing the relationship.
+
+        """
         relationships = ""
         if 'relationships' in table_info:
             for relationship in table_info['relationships']:
@@ -178,7 +234,14 @@ class StarUML:
         return relationships
 
     def get_relationships_imports(self):
-        # Return a dictionary with the app name as the key and the set of imported tables as the value
+        """
+        Return a dictionary with the app name as the key and the set of imported tables as the value.
+
+        Returns:
+            dict: A dictionary containing the app name as the key and the set of imported tables as the value.
+                  The imported tables are represented as a set of tuples, where each tuple contains the name of the
+                  connected app and the name of the connected table.
+        """
         relationships_imports = {}
         try:
             database = self.database_dictionary()
@@ -198,7 +261,19 @@ class StarUML:
         return relationships_imports
 
     def get_empty_classes(self):
-        # Return a dictionary with the app name as the key and the set of empty classes as the value
+        """
+        Returns a dictionary with the app name as the key and the set of empty classes as the value.
+
+        The method iterates over the elements and checks if they are of type 'ERDEntity'. If an element is found
+        to be an 'ERDEntity' and does not have any 'columns' attribute, it extracts the app name and table name
+        from the element's name and adds the table name to the set of empty classes under the corresponding app name.
+
+        Returns:
+            A dictionary with the app name as the key and the set of empty classes as the value.
+
+        Raises:
+            KeyError: If the data format is invalid.
+        """
         empty_classes = {}
         try:
             for sub_element in self.iterate_elements(predicate=lambda x: x['_type'] == 'ERDEntity'):
@@ -215,6 +290,19 @@ class StarUML:
         return empty_classes
     
     def database_dictionary(self):
+        """
+        Creates a dictionary representing the database structure.
+
+        This method iterates through the elements of an ERDDataModel and creates a dictionary
+        that represents the structure of the database. It adds tables, columns, and relationships
+        to the dictionary based on the elements in the ERDDataModel.
+
+        Returns:
+            dict: A dictionary representing the database structure.
+
+        Raises:
+            Exception: If an error occurs while creating the database dictionary.
+        """
         logging.info("Creating database dictionary...")
         self.database = {}
         try:
@@ -233,6 +321,16 @@ class StarUML:
         return self.database
     
     def create_database_structure(self, element, sub_element):
+        """
+        Creates the database structure for the given element and sub_element.
+
+        Args:
+            element (str): The element to create the database structure for.
+            sub_element (dict): The sub-element containing the name of the app and table.
+
+        Returns:
+            None
+        """
         app_name, table_name = sub_element['name'].split('.')
         if app_name not in self.database:
             self.database[app_name] = {}
@@ -240,6 +338,22 @@ class StarUML:
             self.database[app_name][table_name] = {'columns': [], 'relationships': []}
 
     def add_columns(self, sub_element, app_name, table_name):
+        """
+        Adds columns to a table in the database.
+
+        Args:
+            sub_element (dict): The sub-element containing the column information.
+            app_name (str): The name of the application.
+            table_name (str): The name of the table.
+
+        Returns:
+            None
+
+        Raises:
+            KeyError: If the column format is invalid.
+            ValueError: If the length value is invalid.
+            Exception: If an error occurs while adding columns.
+        """
         for column in sub_element['columns']:
             try:
                 column_info = {
@@ -264,6 +378,22 @@ class StarUML:
                 logging.error(f"Error: An error occurred while adding column '{column['name']}' to table '{table_name}' in app '{app_name}': {e}. Skipping column.")
     
     def add_relationships(self, sub_element, element, app_name, table_name):
+        """
+        Adds relationships between tables in the database.
+
+        Args:
+            sub_element (dict): The sub-element containing the relationship information.
+            element (dict): The element containing the table information.
+            app_name (str): The name of the application.
+            table_name (str): The name of the table.
+
+        Returns:
+            None
+
+        Raises:
+            Exception: If an error occurs while adding relationships.
+
+        """
         try:
             for relationship in self.iterate_elements(sub_element, predicate=lambda x: x['_type'] == 'ERDRelationship'):
                 connected_table_id = relationship['end2']['reference']['$ref']
@@ -336,6 +466,17 @@ class StarUML:
         except Exception as e:
             logging.error(f"An error occurred while adding relationships: {str(e)}")
     def remove_relationship_attributes(self):
+        """
+        Removes duplicate relationship attributes from the database tables.
+
+        This method iterates over the database tables and removes any relationship attributes
+        from the columns list of each table. It logs the details of the removed attributes.
+
+        Raises:
+            KeyError: If the data format is invalid.
+            Exception: If an error occurs while removing relationship attributes.
+
+        """
         try:
             for app_name, tables in self.database.items():
                 for table_name, table_info in tables.items():
