@@ -529,7 +529,7 @@ if __name__ == '__main__':
     LOGGING_FILE = 'app.log'
     LOGGING_MODE = 'w'
     logging.basicConfig(filename=LOGGING_FILE, filemode=LOGGING_MODE, format=LOGGING_FORMAT, level=LOGGING_LEVEL)
-    file_paths = ['Database.mdj', 'DBProject.mdj', 'MetaModel.mdj']
+    file_paths = ['Database.mdj', 'DBProject.mdj', 'MetaModel.mdj', 'Prototype.mdj']
     for i in file_paths:
         staruml = StarUML(i)
         staruml.load_data()
