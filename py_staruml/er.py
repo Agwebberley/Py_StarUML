@@ -169,6 +169,7 @@ class StarUML:
             'DATE': 'DateField',
             'DATETIME': 'DateTimeField',
             'TEXT': 'TextField',
+            'VARCHAR': 'CharField'
         }
         database = self.database_dictionary()
         relationships_imports = self.get_relationships_imports()
@@ -183,7 +184,7 @@ class StarUML:
                 if relationships_imports is not None and app_name in relationships_imports:
                     for table_name, connected_tables in relationships_imports[app_name].items():
                         for connected_app, connected_table in connected_tables:
-                            file_contents[app_folder] += f"from {connected_app} import {connected_table}\n"
+                            file_contents[app_folder] += f"from {connected_app}.models import {connected_table}\n"
 
             for table_name, table_info in tables.items():
                 file_contents[app_folder] += f"\n\nclass {table_name}(models.Model):\n"
@@ -223,7 +224,9 @@ class StarUML:
                     column_type, column_length, column_primary_key, column_unique, column_not_null = column_attributes
                     django_column_type = type_mapping.get(column_type, 'CharField')
                     columns += f"    {column_name} = models.{django_column_type}("
-                    if column_type in ['CHAR', 'TEXT'] and column_length > 0:
+                    if django_column_type == 'CharField':
+                        if not column_length:
+                            column_length = 255
                         columns += f"max_length={column_length}, "
                     if column_primary_key:
                         columns += "primary_key=True, "
@@ -529,7 +532,7 @@ if __name__ == '__main__':
     LOGGING_FILE = 'app.log'
     LOGGING_MODE = 'w'
     logging.basicConfig(filename=LOGGING_FILE, filemode=LOGGING_MODE, format=LOGGING_FORMAT, level=LOGGING_LEVEL)
-    file_paths = ['Database.mdj', 'DBProject.mdj', 'MetaModel.mdj', 'Prototype.mdj']
+    file_paths = ['Database.mdj', 'DBProject.mdj', 'Prototype.mdj']
     for i in file_paths:
         staruml = StarUML(i)
         staruml.load_data()

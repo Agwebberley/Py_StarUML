@@ -3,8 +3,8 @@ from django.db import models
 
 class Domains(models.Model):
     DomainID = models.IntegerField(primary_key=True)
-    DomainName = models.CharField()
-    Description = models.TextField(max_length=255)
+    DomainName = models.CharField(max_length=255)
+    Description = models.TextField()
     CreatedDate = models.DateTimeField()
     ModifiedDate = models.DateTimeField()
     IsActive = models.BooleanField()
@@ -12,7 +12,7 @@ class Domains(models.Model):
 
 class Entity(models.Model):
     EntityID = models.IntegerField(primary_key=True)
-    EntityName = models.CharField()
+    EntityName = models.CharField(max_length=255)
     CreatedDate = models.DateTimeField()
     ModifiedDate = models.DateTimeField()
     IsActive = models.BooleanField()
@@ -21,9 +21,9 @@ class Entity(models.Model):
 
 class Attributes(models.Model):
     AttributeID = models.IntegerField(primary_key=True)
-    AttributeName = models.CharField()
-    DataType = models.CharField()
-    DefaultValue = models.CharField()
+    AttributeName = models.CharField(max_length=255)
+    DataType = models.CharField(max_length=255)
+    DefaultValue = models.CharField(max_length=255)
     IsRequired = models.BooleanField()
     IsUnique = models.BooleanField()
     EntityID = models.ForeignKey('Entity', on_delete=models.CASCADE)
@@ -41,6 +41,6 @@ class Relationships(models.Model):
     RelationshipID = models.IntegerField(primary_key=True)
     ParentEntityID = models.IntegerField()
     ChildEntityID = models.IntegerField()
-    RelationshipName = models.CharField()
-    RelationshipType = models.CharField()
-    Description = models.TextField(max_length=255)
+    RelationshipName = models.CharField(max_length=255)
+    RelationshipType = models.CharField(max_length=50)
+    Description = models.TextField()
