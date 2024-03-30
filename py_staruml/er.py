@@ -402,6 +402,10 @@ class StarUML:
                         bool(column.get('notNull', False))
                     ]
                 }
+                # Ignore primary key columns
+                if column_info[column['name']][2]:
+                    logging.warning(f"Ignoring primary key column '{column['name']}' in table '{table_name}' of app '{app_name}'.")
+                    continue
                 # If the column is a text type and has a length of 0, set the length to 255
                 if column_info[column['name']][0] in ['CHAR', 'TEXT'] and column_info[column['name']][1] == 0:
                     column_info[column['name']][1] = 255
