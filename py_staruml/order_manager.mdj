@@ -40,7 +40,7 @@
 									"top": 541,
 									"width": 232.80007934570312,
 									"height": 13,
-									"text": "orders.order"
+									"text": "order"
 								},
 								{
 									"_type": "ERDColumnCompartmentView",
@@ -198,7 +198,7 @@
 									"top": 541,
 									"width": 248,
 									"height": 13,
-									"text": "customers.customer"
+									"text": "customer"
 								},
 								{
 									"_type": "ERDColumnCompartmentView",
@@ -341,7 +341,7 @@
 									"top": 301,
 									"width": 248.40008544921875,
 									"height": 13,
-									"text": "inventory.part"
+									"text": "part"
 								},
 								{
 									"_type": "ERDColumnCompartmentView",
@@ -499,7 +499,7 @@
 									"top": 309,
 									"width": 232,
 									"height": 13,
-									"text": "orders.order_item"
+									"text": "order_item"
 								},
 								{
 									"_type": "ERDColumnCompartmentView",
@@ -652,17 +652,18 @@
 									"_parent": {
 										"$ref": "AAAAAAGQKLW44u6YuJg="
 									},
-									"visible": false,
 									"font": "Source Code Pro;13;0",
-									"left": 551,
-									"top": 613,
+									"left": 512,
+									"top": 592,
+									"width": 85.80003356933594,
 									"height": 13,
-									"alpha": 1.5707963267948966,
-									"distance": 15,
+									"alpha": 3.9269883169934916,
+									"distance": 2.8284271247461903,
 									"hostEdge": {
 										"$ref": "AAAAAAGQKLW44u6YuJg="
 									},
-									"edgePosition": 1
+									"edgePosition": 1,
+									"text": "customer_id"
 								},
 								{
 									"_type": "EdgeLabelView",
@@ -672,7 +673,7 @@
 									},
 									"font": "Source Code Pro;13;0",
 									"left": 614,
-									"top": 612,
+									"top": 608,
 									"height": 13,
 									"alpha": 0.5235987755982988,
 									"distance": 30,
@@ -689,15 +690,14 @@
 									},
 									"font": "Source Code Pro;13;0",
 									"left": 512,
-									"top": 599,
+									"top": 623,
 									"width": 85.80003356933594,
 									"height": 13,
-									"alpha": -0.022468126062166447,
-									"distance": 89.02246907382428,
+									"alpha": -0.3251175110304039,
+									"distance": 93.92017887546851,
 									"hostEdge": {
 										"$ref": "AAAAAAGQKLW44u6YuJg="
-									},
-									"text": "customer_id"
+									}
 								}
 							],
 							"font": "Source Code Pro;13;0",
@@ -708,7 +708,7 @@
 								"$ref": "AAAAAAGQKKwx0+2b5Ag="
 							},
 							"lineStyle": 2,
-							"points": "640:604;465:604",
+							"points": "640:600;465:600",
 							"nameLabel": {
 								"$ref": "AAAAAAGQKLW44u6ZD/c="
 							},
@@ -891,7 +891,7 @@
 					"_parent": {
 						"$ref": "AAAAAAGQKKsZee2HpVA="
 					},
-					"name": "orders.order",
+					"name": "order",
 					"ownedElements": [
 						{
 							"_type": "ERDRelationship",
@@ -1004,7 +1004,7 @@
 					"_parent": {
 						"$ref": "AAAAAAGQKKsZee2HpVA="
 					},
-					"name": "customers.customer",
+					"name": "customer",
 					"ownedElements": [
 						{
 							"_type": "ERDRelationship",
@@ -1012,6 +1012,7 @@
 							"_parent": {
 								"$ref": "AAAAAAGQKKwx0+2ZXLU="
 							},
+							"name": "customer_id",
 							"end1": {
 								"_type": "ERDRelationshipEnd",
 								"_id": "AAAAAAGQKLW44u6VKh0=",
@@ -1028,7 +1029,6 @@
 								"_parent": {
 									"$ref": "AAAAAAGQKLW44u6UKTU="
 								},
-								"name": "customer_id",
 								"reference": {
 									"$ref": "AAAAAAGQKKswlO2Miwc="
 								},
@@ -1106,7 +1106,7 @@
 					"_parent": {
 						"$ref": "AAAAAAGQKKsZee2HpVA="
 					},
-					"name": "inventory.part",
+					"name": "part",
 					"ownedElements": [
 						{
 							"_type": "ERDRelationship",
@@ -1218,7 +1218,7 @@
 					"_parent": {
 						"$ref": "AAAAAAGQKKsZee2HpVA="
 					},
-					"name": "orders.order_item",
+					"name": "order_item",
 					"columns": [
 						{
 							"_type": "ERDColumn",
