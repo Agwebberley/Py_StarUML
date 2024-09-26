@@ -108,7 +108,6 @@ def main():
             data = data["ownedElements"]
         else:
             logging.error("Invalid JSON structure.")
-            print("Invalid JSON structure.")
             return
 
     # Flatten the data to get entities
@@ -260,7 +259,6 @@ def main():
                         f.write(f"    {field_name} = {field_def}\n")
                     f.write("\n")
         logging.info(f"Generated {models_py_path}")
-        print(f"Generated {models_py_path}")
 
         # Generate views.py
         views_py_path = os.path.join(app_dir, "views.py")
@@ -295,7 +293,6 @@ def main():
                 f.write(f"    model = {model_name}\n")
                 f.write(f"    success_url = reverse_lazy('{app_name}s-list')\n\n")
         logging.info(f"Generated {views_py_path}")
-        print(f"Generated {views_py_path}")
 
         # Generate urls.py
         urls_py_path = os.path.join(app_dir, "urls.py")
@@ -333,10 +330,8 @@ def main():
                 )
             f.write("]\n")
         logging.info(f"Generated {urls_py_path}")
-        print(f"Generated {urls_py_path}")
 
     logging.info("models.py, views.py, and urls.py files generated successfully.")
-    print("models.py, views.py, and urls.py files generated successfully.")
 
 
 if __name__ == "__main__":
