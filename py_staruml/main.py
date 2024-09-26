@@ -73,13 +73,15 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Generate Django models.py files from StarUML JSON output."
+        description="Generate Django models.py, views.py, and urls.py files from StarUML JSON output."
     )
     parser.add_argument(
         "json_file", help="Path to the JSON file containing the StarUML output."
     )
     parser.add_argument(
-        "--output_dir", default=".", help="Directory to output the models.py files."
+        "--output_dir",
+        default=".",
+        help="Directory to output the models.py, views.py, and urls.py files.",
     )
     parser.add_argument(
         "--log-level",
@@ -240,7 +242,7 @@ def main():
 
     logging.info("Third pass (relationships) completed.")
 
-    # Output models.py files per app
+    # Output models.py, views.py, and urls.py files per app
     for app_name, app_models in model_info.items():
         app_dir = os.path.join(output_dir, app_name)
         os.makedirs(app_dir, exist_ok=True)
@@ -260,8 +262,81 @@ def main():
         logging.info(f"Generated {models_py_path}")
         print(f"Generated {models_py_path}")
 
-    logging.info("models.py files generated successfully.")
-    print("models.py files generated successfully.")
+        # Generate views.py
+        views_py_path = os.path.join(app_dir, "views.py")
+        with open(views_py_path, "w") as f:
+            # Write imports
+            f.write("from django.shortcuts import render\n")
+            f.write("from frame.base_views import (\n")
+            f.write("    BaseCreateView,\n")
+            f.write("    BaseListView,\n")
+            f.write("    BaseUpdateView,\n")
+            f.write("    BaseDeleteView,\n")
+            f.write("    BaseDetailView,\n")
+            f.write(")\n")
+            f.write(f"from .models import {', '.join(app_models.keys())}\n")
+            f.write("from django.urls import reverse_lazy\n")
+            f.write("# Create your views here.\n\n")
+
+            # Generate views for each model
+            for model_name in app_models.keys():
+                # CreateView
+                f.write(f"class {model_name}CreateView(BaseCreateView):\n")
+                f.write(f"    model = {model_name}\n\n")
+                # ListView
+                f.write(f"class {model_name}ListView(BaseListView):\n")
+                f.write(f"    model = {model_name}\n\n")
+                # UpdateView
+                f.write(f"class {model_name}UpdateView(BaseUpdateView):\n")
+                f.write(f"    model = {model_name}\n")
+                f.write(f"    success_url = reverse_lazy('{app_name}s-list')\n\n")
+                # DeleteView
+                f.write(f"class {model_name}DeleteView(BaseDeleteView):\n")
+                f.write(f"    model = {model_name}\n")
+                f.write(f"    success_url = reverse_lazy('{app_name}s-list')\n\n")
+        logging.info(f"Generated {views_py_path}")
+        print(f"Generated {views_py_path}")
+
+        # Generate urls.py
+        urls_py_path = os.path.join(app_dir, "urls.py")
+        with open(urls_py_path, "w") as f:
+            # Write imports
+            f.write("from django.urls import path\n")
+            f.write("from .views import (\n")
+            for model_name in app_models.keys():
+                f.write(f"    {model_name}CreateView,\n")
+                f.write(f"    {model_name}ListView,\n")
+                f.write(f"    {model_name}UpdateView,\n")
+                f.write(f"    {model_name}DeleteView,\n")
+            f.write(")\n\n")
+
+            # Start urlpatterns
+            f.write("urlpatterns = [\n")
+            for model_name in app_models.keys():
+                model_name_lower = model_name.lower()
+                model_name_plural = model_name_lower + "s"  # Simple pluralization
+                # CreateView
+                f.write(
+                    f"    path('{model_name}/create/', {model_name}CreateView.as_view(), name='{model_name_plural}-create'),\n"
+                )
+                # ListView
+                f.write(
+                    f"    path('{model_name}/list/', {model_name}ListView.as_view(), name='{model_name_plural}-list'),\n"
+                )
+                # UpdateView
+                f.write(
+                    f"    path('{model_name}/update/<int:pk>/', {model_name}UpdateView.as_view(), name='{model_name_plural}-update'),\n"
+                )
+                # DeleteView
+                f.write(
+                    f"    path('{model_name}/delete/<int:pk>/', {model_name}DeleteView.as_view(), name='{model_name_plural}-delete'),\n"
+                )
+            f.write("]\n")
+        logging.info(f"Generated {urls_py_path}")
+        print(f"Generated {urls_py_path}")
+
+    logging.info("models.py, views.py, and urls.py files generated successfully.")
+    print("models.py, views.py, and urls.py files generated successfully.")
 
 
 if __name__ == "__main__":
