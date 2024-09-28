@@ -23,7 +23,7 @@ Welcome to the documentation for **Py_StarUML**. This tool automates the creatio
 
 ## **Introduction**
 
-**Py_StarUML ** is a Python script designed to automate the creation of Django models and associated views and URLs. By parsing the JSON output of StarUML ERD diagrams, it generates:
+**Py_StarUML** is a Python script designed to automate the creation of Django models and associated views and URLs. By parsing the JSON output of StarUML ERD diagrams, it generates:
 
 - `models.py`: Django models corresponding to your database entities.
 - `views.py`: Standard CRUD views for each model using base views.
@@ -86,12 +86,12 @@ The script is executed from the command line and requires the path to the StarUM
 ### **Example**
 
 ```bash
-python main.py path/to/your/staruml_output.json --output_dir ./generated_apps --log-level INFO
+python main.py path/to/your/staruml_output.mdj --output_dir ./generated_apps --log-level INFO
 ```
 
 This command will:
 
-- Parse the StarUML JSON file at `path/to/your/staruml_output.json`.
+- Parse the StarUML JSON file at `path/to/your/staruml_output.mdj`.
 - Generate the Django files in the `./generated_apps` directory.
 - Set the logging level to `INFO` to display informational messages.
 
