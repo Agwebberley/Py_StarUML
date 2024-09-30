@@ -258,6 +258,72 @@ def main():
                     for field_name, field_def in fields:
                         f.write(f"    {field_name} = {field_def}\n")
                     f.write("\n")
+
+                # Build the config dictionary
+                config = {}
+                config["model_name"] = model_name
+                config["list_title"] = model_name + "s"  # Simple pluralization
+                config["create_title"] = "Create " + model_name
+                config["enable_search"] = True
+                # For default_sort_by, pick 'created_at' if it exists, else the first field
+                field_names = [field_name for (field_name, field_def) in fields]
+                if "created_at" in field_names:
+                    config["default_sort_by"] = "created_at"
+                else:
+                    config["default_sort_by"] = field_names[0] if field_names else ""
+                config["list_url"] = model_name.lower() + "-list"
+                config["navigation"] = True
+                # Build fields configuration
+                config_fields = []
+                for field_name in field_names:
+                    field_config = {
+                        "name": field_name,
+                        "display_name": field_name.replace("_", " ").title(),
+                        "enable_in_list": True,
+                        "enable_in_detail": True,
+                        "enable_in_form": True,
+                    }
+                    config_fields.append(field_config)
+                config["fields"] = config_fields
+
+                config["actions"] = {
+                    "button": [
+                        {
+                            "name": "Create",
+                            "url": model_name.lower() + "-create",
+                            "disabled": ["detail"],
+                        },
+                    ],
+                    "dropdown": [
+                        {
+                            "name": "Details",
+                            "url": model_name.lower() + "-detail",
+                            "disabled": ["detail"],
+                        },
+                        {
+                            "name": "Edit",
+                            "url": model_name.lower() + "-update",
+                        },
+                        {
+                            "name": "Delete",
+                            "url": model_name.lower() + "-delete",
+                        },
+                    ],
+                }
+
+                # Write the get_config class method
+                f.write("    @classmethod\n")
+                f.write("    def get_config(cls):\n")
+                f.write("        return ")
+                # Use json.dumps for pretty-printing the dictionary
+                config_str = json.dumps(config, indent=8)
+                config_lines = config_str.splitlines()
+                for line in config_lines:
+                    # Fix true/false to True/False
+                    line = line.replace("true", "True").replace("false", "False")
+                    f.write("        " + line + "\n")
+                f.write("\n")
+
         logging.info(f"Generated {models_py_path}")
 
         # Generate views.py
