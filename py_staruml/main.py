@@ -346,21 +346,31 @@ def main():
 
             # Generate views for each model
             for model_name in app_models.keys():
+                model_name_lower = model_name.lower()
                 # CreateView
                 f.write(f"class {model_name}CreateView(BaseCreateView):\n")
                 f.write(f"    model = {model_name}\n")
-                f.write(f"    success_url = reverse_lazy('{model_name}-list')\n\n")
+                f.write(
+                    f"    success_url = reverse_lazy('{model_name_lower}-list')\n\n"
+                )
                 # ListView
                 f.write(f"class {model_name}ListView(BaseListView):\n")
                 f.write(f"    model = {model_name}\n\n")
                 # UpdateView
                 f.write(f"class {model_name}UpdateView(BaseUpdateView):\n")
                 f.write(f"    model = {model_name}\n")
-                f.write(f"    success_url = reverse_lazy('{model_name}-list')\n\n")
+                f.write(
+                    f"    success_url = reverse_lazy('{model_name_lower}-list')\n\n"
+                )
                 # DeleteView
                 f.write(f"class {model_name}DeleteView(BaseDeleteView):\n")
                 f.write(f"    model = {model_name}\n")
-                f.write(f"    success_url = reverse_lazy('{model_name}-list')\n\n")
+                f.write(
+                    f"    success_url = reverse_lazy('{model_name_lower}-list')\n\n"
+                )
+                # DetailView
+                f.write(f"class {model_name}DetailView(BaseDetailView):\n")
+                f.write(f"    model = {model_name}\n\n")
         logging.info(f"Generated {views_py_path}")
 
         # Generate urls.py
