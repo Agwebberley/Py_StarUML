@@ -248,9 +248,11 @@ def main():
         models_py_path = os.path.join(app_dir, "models.py")
 
         with open(models_py_path, "w") as f:
-            f.write("from django.db import models\n\n")
+            f.write(
+                "from django.db import models\nfrom frame.models import BaseModel\n\n"
+            )
             for model_name, model_data in app_models.items():
-                f.write(f"class {model_name}(models.Model):\n")
+                f.write(f"class {model_name}(BaseModel):\n")
                 fields = model_data["fields"]
                 if not fields:
                     f.write("    pass\n\n")
@@ -346,18 +348,19 @@ def main():
             for model_name in app_models.keys():
                 # CreateView
                 f.write(f"class {model_name}CreateView(BaseCreateView):\n")
-                f.write(f"    model = {model_name}\n\n")
+                f.write(f"    model = {model_name}\n")
+                f.write(f"    success_url = reverse_lazy('{model_name}-list')\n\n")
                 # ListView
                 f.write(f"class {model_name}ListView(BaseListView):\n")
                 f.write(f"    model = {model_name}\n\n")
                 # UpdateView
                 f.write(f"class {model_name}UpdateView(BaseUpdateView):\n")
                 f.write(f"    model = {model_name}\n")
-                f.write(f"    success_url = reverse_lazy('{app_name}s-list')\n\n")
+                f.write(f"    success_url = reverse_lazy('{model_name}-list')\n\n")
                 # DeleteView
                 f.write(f"class {model_name}DeleteView(BaseDeleteView):\n")
                 f.write(f"    model = {model_name}\n")
-                f.write(f"    success_url = reverse_lazy('{app_name}s-list')\n\n")
+                f.write(f"    success_url = reverse_lazy('{model_name}-list')\n\n")
         logging.info(f"Generated {views_py_path}")
 
         # Generate urls.py
@@ -377,22 +380,21 @@ def main():
             f.write("urlpatterns = [\n")
             for model_name in app_models.keys():
                 model_name_lower = model_name.lower()
-                model_name_plural = model_name_lower + "s"  # Simple pluralization
                 # CreateView
                 f.write(
-                    f"    path('{model_name}/create/', {model_name}CreateView.as_view(), name='{model_name_plural}-create'),\n"
+                    f"    path('{model_name_lower}/create/', {model_name}CreateView.as_view(), name='{model_name_lower}-create'),\n"
                 )
                 # ListView
                 f.write(
-                    f"    path('{model_name}/list/', {model_name}ListView.as_view(), name='{model_name_plural}-list'),\n"
+                    f"    path('{model_name_lower}/list/', {model_name}ListView.as_view(), name='{model_name_lower}-list'),\n"
                 )
                 # UpdateView
                 f.write(
-                    f"    path('{model_name}/update/<int:pk>/', {model_name}UpdateView.as_view(), name='{model_name_plural}-update'),\n"
+                    f"    path('{model_name_lower}/update/<int:pk>/', {model_name}UpdateView.as_view(), name='{model_name_lower}-update'),\n"
                 )
                 # DeleteView
                 f.write(
-                    f"    path('{model_name}/delete/<int:pk>/', {model_name}DeleteView.as_view(), name='{model_name_plural}-delete'),\n"
+                    f"    path('{model_name_lower}/delete/<int:pk>/', {model_name}DeleteView.as_view(), name='{model_name_lower}-delete'),\n"
                 )
             f.write("]\n")
         logging.info(f"Generated {urls_py_path}")
