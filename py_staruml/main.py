@@ -405,6 +405,7 @@ def main():
                 f.write(f"    {model_name}ListView,\n")
                 f.write(f"    {model_name}UpdateView,\n")
                 f.write(f"    {model_name}DeleteView,\n")
+                f.write(f"    {model_name}DetailView,\n")
             f.write(")\n\n")
 
             # Start urlpatterns
@@ -426,6 +427,10 @@ def main():
                 # DeleteView
                 f.write(
                     f"    path('{model_name_lower}/delete/<int:pk>/', {model_name}DeleteView.as_view(), name='{model_name_lower}-delete'),\n"
+                )
+                # DetailView
+                f.write(
+                    f"    path('{model_name_lower}/detail/<int:pk>/', {model_name}DetailView.as_view(), name='{model_name_lower}-detail'),\n"
                 )
             f.write("]\n")
         logging.info(f"Generated {urls_py_path}")
