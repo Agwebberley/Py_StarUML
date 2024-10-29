@@ -88,6 +88,12 @@ def main():
         default="WARNING",
         help="Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)",
     )
+    parser.add_argument(
+        "--slug",
+        default="",
+        help="Slug to use for app names (e.g. 'myapp' for 'myapp.models')",
+        required=True,
+    )
     args = parser.parse_args()
 
     numeric_level = getattr(logging, args.log_level.upper(), None)
@@ -97,6 +103,7 @@ def main():
 
     json_file = args.json_file
     output_dir = args.output_dir
+    slug = args.slug
 
     logging.info(f"Opening JSON file: {json_file}")
     with open(json_file, "r") as f:
@@ -245,6 +252,20 @@ def main():
     for app_name, app_models in model_info.items():
         app_dir = os.path.join(output_dir, app_name)
         os.makedirs(app_dir, exist_ok=True)
+
+        # Touch __init__.py
+        init_py_path = os.path.join(app_dir, "__init__.py")
+        with open(init_py_path, "w") as f:
+            f.write("# __init__.py\n")
+
+        # Generate apps.py
+        apps_py_path = os.path.join(app_dir, "apps.py")
+        with open(apps_py_path, "w") as f:
+            f.write("from django.apps import AppConfig\n\n")
+            f.write(f"class {app_name.capitalize()}Config(AppConfig):\n")
+            f.write(f"    default_auto_field = 'django.db.models.BigAutoField'\n")
+            f.write(f"    name = '{slug}.{app_name}'\n")
+
         models_py_path = os.path.join(app_dir, "models.py")
 
         with open(models_py_path, "w") as f:
